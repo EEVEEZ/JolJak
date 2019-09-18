@@ -21,10 +21,13 @@ import android.widget.Toast;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
-import java.net.Socket;
+//import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.net.URISyntaxException;
 
+import io.socket.client.IO;
+import io.socket.client.Socket;
 import zeusees.tracking.Face;
 import zeusees.tracking.FaceTracking;
 
@@ -108,6 +111,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     }
+
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         if (requestCode == 5) {
@@ -148,11 +152,18 @@ public class MainActivity extends AppCompatActivity {
     private GLBitmap mBitmap;
     private Socket mSocket;
 
-//    private SeekBar seekBarA;
+    //    private SeekBar seekBarA;
 //    private SeekBar seekBarB;
 //    private SeekBar seekBarC;
     private void init(){
-        mSocket = IO
+        try{
+            mSocket = IO.socket("15.164.221.69");
+            mSocket.connect();
+        }
+        catch (URISyntaxException e){
+            System.out.println("Can't Connect");
+        }
+
         InitModelFiles();
 
         mMultiTrack106 = new FaceTracking("/sdcard/ZeuseesFaceTracking/models");
@@ -276,6 +287,9 @@ public class MainActivity extends AppCompatActivity {
                 mHandler.post(new Runnable() {
                     @Override
                     public void run() {
+                        if(mSocket.connected()) {
+                            mSocket.disconnect();
+                        }
                         cameraOverlap.release();
                         mFramebuffer.release();
                         mFrame.release();
