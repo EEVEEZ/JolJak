@@ -3,6 +3,7 @@ package com.hyq.hm.hyperlandmark;
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.graphics.Rect;
 import android.hardware.Camera;
 import android.os.Build;
 import android.os.Bundle;
@@ -16,20 +17,23 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.View;
+import android.widget.Button;
 import android.widget.Toast;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
-//import java.net.Socket;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
-import java.net.URISyntaxException;
 
 import io.socket.client.IO;
 import io.socket.client.Socket;
 import zeusees.tracking.Face;
 import zeusees.tracking.FaceTracking;
+
+//import java.net.Socket;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -80,7 +84,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     private String[] denied;
-    private String[] permissions = {Manifest.permission.WRITE_EXTERNAL_STORAGE,Manifest.permission.CAMERA};
+    private String[] permissions = {Manifest.permission.WRITE_EXTERNAL_STORAGE,Manifest.permission.CAMERA,Manifest.permission.INTERNET};
 
     private FaceTracking mMultiTrack106 = null;
     private boolean mTrack106 = false;
@@ -152,12 +156,10 @@ public class MainActivity extends AppCompatActivity {
     private GLBitmap mBitmap;
     private Socket mSocket;
 
-    //    private SeekBar seekBarA;
-//    private SeekBar seekBarB;
-//    private SeekBar seekBarC;
+    private Button captureTest;
     private void init(){
         try{
-            mSocket = IO.socket("15.164.221.69");
+            mSocket = IO.socket("15.164.221.69:5000");
             mSocket.connect();
         }
         catch (URISyntaxException e){
@@ -207,40 +209,40 @@ public class MainActivity extends AppCompatActivity {
                         List<Face> faceActions = mMultiTrack106.getTrackingInfo();
                         float[] p = null;
                         float[] points = null;
-                        //Point dot on faceshape
-//                        for (Face r : faceActions) {
-//                            points = new float[106*2];
-//                            Rect rect=new Rect(CameraOverlap.PREVIEW_HEIGHT - r.left,r.top,CameraOverlap.PREVIEW_HEIGHT - r.right,r.bottom);
-//                            for(int i = 0 ; i < 106 ; i++) {
-//                                int x;
-//                                if (rotate270) {
-//                                    x = r.landmarks[i*2];
-//                                }else{
-//                                    x = CameraOverlap.PREVIEW_HEIGHT-r.landmarks[i*2];
-//                                }
-//                                int y = r.landmarks[i*2+1];
-//                                points[i*2] = view2openglX(x,CameraOverlap.PREVIEW_HEIGHT);
-//                                points[i*2+1] = view2openglY(y,CameraOverlap.PREVIEW_WIDTH);
-//                                if(i == 70){
-//                                    p = new float[8];
-//                                    p[0] = view2openglX(x + 20,CameraOverlap.PREVIEW_HEIGHT);
-//                                    p[1] = view2openglY(y - 20,CameraOverlap.PREVIEW_WIDTH);
-//                                    p[2] = view2openglX(x - 20,CameraOverlap.PREVIEW_HEIGHT);
-//                                    p[3] = view2openglY(y - 20,CameraOverlap.PREVIEW_WIDTH);
-//                                    p[4] = view2openglX(x + 20,CameraOverlap.PREVIEW_HEIGHT);
-//                                    p[5] = view2openglY(y + 20,CameraOverlap.PREVIEW_WIDTH);
-//                                    p[6] = view2openglX(x - 20,CameraOverlap.PREVIEW_HEIGHT);
-//                                    p[7] = view2openglY(y + 20,CameraOverlap.PREVIEW_WIDTH);
-//                                }
-//                            }
-//                            if(p != null){
-//                                break;
-//                            }
-//                        }
+//                        Point dot on faceshape
+                        for (Face r : faceActions) {
+                            points = new float[106*2];
+                            Rect rect=new Rect(CameraOverlap.PREVIEW_HEIGHT - r.left,r.top,CameraOverlap.PREVIEW_HEIGHT - r.right,r.bottom);
+                            for(int i = 0 ; i < 106 ; i++) {
+                                int x;
+                                if (rotate270) {
+                                    x = r.landmarks[i*2];
+                                }else{
+                                    x = CameraOverlap.PREVIEW_HEIGHT-r.landmarks[i*2];
+                                }
+                                int y = r.landmarks[i*2+1];
+                                points[i*2] = view2openglX(x,CameraOverlap.PREVIEW_HEIGHT);
+                                points[i*2+1] = view2openglY(y,CameraOverlap.PREVIEW_WIDTH);
+                                if(i == 70){
+                                    p = new float[8];
+                                    p[0] = view2openglX(x + 20,CameraOverlap.PREVIEW_HEIGHT);
+                                    p[1] = view2openglY(y - 20,CameraOverlap.PREVIEW_WIDTH);
+                                    p[2] = view2openglX(x - 20,CameraOverlap.PREVIEW_HEIGHT);
+                                    p[3] = view2openglY(y - 20,CameraOverlap.PREVIEW_WIDTH);
+                                    p[4] = view2openglX(x + 20,CameraOverlap.PREVIEW_HEIGHT);
+                                    p[5] = view2openglY(y + 20,CameraOverlap.PREVIEW_WIDTH);
+                                    p[6] = view2openglX(x - 20,CameraOverlap.PREVIEW_HEIGHT);
+                                    p[7] = view2openglY(y + 20,CameraOverlap.PREVIEW_WIDTH);
+                                }
+                            }
+                            if(p != null){
+                                break;
+                            }
+                        }
                         int tid = 0;
                         if(p != null){
-                            mBitmap.setPoints(p);
-                            tid = mBitmap.drawFrame();
+//                            mBitmap.setPoints(p);
+//                            tid = mBitmap.drawFrame();
                         }
                         mFrame.drawFrame(tid,mFramebuffer.drawFrameBuffer(),mFramebuffer.getMatrix());
                         if(points != null){
@@ -253,6 +255,16 @@ public class MainActivity extends AppCompatActivity {
                 });
             }
         });
+        View.OnClickListener listener = new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                System.out.println("Button On Click");
+//                mPoints.drawPoints();
+                mPoints.renderPoints();
+            }
+        };
+        captureTest = findViewById(R.id.captureTest);
+        captureTest.setOnClickListener(listener);
         mSurfaceView = findViewById(R.id.surface_view);
         mSurfaceView.getHolder().addCallback(new SurfaceHolder.Callback() {
             @Override
@@ -322,9 +334,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         }
-//        seekBarA = findViewById(R.id.seek_bar_a);
-//        seekBarB = findViewById(R.id.seek_bar_b);
-//        seekBarC = findViewById(R.id.seek_bar_c);
     }
     private float view2openglX(int x,int width){
         float centerX = width/2.0f;

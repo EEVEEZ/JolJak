@@ -17,6 +17,13 @@
     <FrameLayout
         android:id="@+id/SelectHat"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:layout_height="match_parent">
+
+        <Button
+            android:id="@+id/captureTest"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="captureTest" />
+    </FrameLayout>
 
 </LinearLayout>

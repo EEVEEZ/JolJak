@@ -1,7 +1,5 @@
 package com.hyq.hm.hyperlandmark;
 
-import android.graphics.Rect;
-import android.opengl.GLES11Ext;
 import android.opengl.GLES20;
 
 import java.nio.ByteBuffer;
@@ -23,8 +21,8 @@ public class GLPoints {
 
     private String fragmentShader =
             "void main() {\n" +
-            "    gl_FragColor = vec4(1.0,0.0,0.0,1.0);\n" +
-            "}";
+                    "    gl_FragColor = vec4(1.0,0.0,0.0,1.0);\n" +
+                    "}";
     private  String vertexShader = "attribute vec2 aPosition;\n" +
             "void main() {\n" +
             "    gl_Position = vec4(aPosition,0.0,1.0);\n" +
@@ -62,6 +60,11 @@ public class GLPoints {
         GLES20.glVertexAttribPointer(aPositionHandle, 2, GLES20.GL_FLOAT, false,
                 0, 0);
         GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, 0);
+        GLES20.glDrawArrays(GLES20.GL_POINTS, 0, 106);
+    }
+
+    public void renderPoints(){
+        drawPoints();
         GLES20.glDrawArrays(GLES20.GL_POINTS, 0, 106);
     }
 
