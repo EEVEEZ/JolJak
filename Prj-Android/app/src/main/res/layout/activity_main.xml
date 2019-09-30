@@ -12,18 +12,17 @@
             android:layout_height="match_parent"
             android:layout_alignParentBottom="true"
             android:layout_marginBottom="0dp" />
+
+        <Button
+            android:id="@+id/Capture"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Capture" />
     </com.hyq.hm.hyperlandmark.FixedAspectRatioRelativeLayout>
 
     <FrameLayout
         android:id="@+id/SelectHat"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
-        <Button
-            android:id="@+id/captureTest"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="captureTest" />
-    </FrameLayout>
+        android:layout_height="match_parent"/>
 
 </LinearLayout>

@@ -3,6 +3,7 @@ package com.hyq.hm.hyperlandmark;
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.graphics.Rect;
 import android.hardware.Camera;
 import android.os.Build;
@@ -21,6 +22,9 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
@@ -30,6 +34,7 @@ import java.util.List;
 
 import io.socket.client.IO;
 import io.socket.client.Socket;
+import io.socket.emitter.Emitter;
 import zeusees.tracking.Face;
 import zeusees.tracking.FaceTracking;
 
@@ -89,10 +94,28 @@ public class MainActivity extends AppCompatActivity {
     private FaceTracking mMultiTrack106 = null;
     private boolean mTrack106 = false;
 
+    private Socket mSocket;
+    {
+        try{
+//            mSocket = IO.socket("http://15.164.221.69:5000");
+            mSocket = IO.socket("https://echo.websocket.org/");
+            System.out.println(mSocket.id());
+        }
+        catch (URISyntaxException e){
+            Log.e("err",e.toString());
+            System.out.println("Can't Connect");
+        }
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        mSocket.on(Socket.EVENT_CONNECT,onConnect);
+        mSocket.on(Socket.EVENT_CONNECT_ERROR,onError);
+        mSocket.on(Socket.EVENT_CONNECT_TIMEOUT,onError);
+        mSocket.on(Socket.EVENT_DISCONNECT,onError);
+        mSocket.connect();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             ArrayList<String> list = new ArrayList<>();
             for (int i = 0; i < permissions.length; i++) {
@@ -154,19 +177,27 @@ public class MainActivity extends AppCompatActivity {
     private GLFrame mFrame;
     private GLPoints mPoints;
     private GLBitmap mBitmap;
-    private Socket mSocket;
 
-    private Button captureTest;
+//    private boolean allowedCapture;
+    private boolean touched;
+
+    private Button CaptureButton;
+
+    View.OnClickListener listener = new View.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+            Toast toast = Toast.makeText(getApplicationContext(),"Caputured",Toast.LENGTH_LONG);
+            toast.show();
+//            allowedCapture = true;
+            touched = true;
+        }
+    };
+
     private void init(){
-        try{
-            mSocket = IO.socket("15.164.221.69:5000");
-            mSocket.connect();
-        }
-        catch (URISyntaxException e){
-            System.out.println("Can't Connect");
-        }
-
         InitModelFiles();
+
+        CaptureButton = findViewById(R.id.Capture);
+        CaptureButton.setOnClickListener(listener);
 
         mMultiTrack106 = new FaceTracking("/sdcard/ZeuseesFaceTracking/models");
 
@@ -185,24 +216,27 @@ public class MainActivity extends AppCompatActivity {
                 synchronized (lockObj) {
                     System.arraycopy(data, 0, mNv21Data, 0, data.length);
                 }
+
+                Bitmap bitmap = null;
+
                 mHandler.post(new Runnable() {
                     @Override
                     public void run() {
-                        if(mEglUtils == null){
+                        if (mEglUtils == null) {
                             return;
                         }
-                        mFrame.setS((float)1.0);
+                        mFrame.setS((float) 1.0);
 //                        System.out.printf("\nSetS : %f\n", seekBarA.getProgress()/100.0f);
-                        mFrame.setH((float)0.0);
+                        mFrame.setH((float) 0.0);
 //                        System.out.printf("\nSetH : %f\n",seekBarB.getProgress()/360.0f);
-                        mFrame.setL((float)0.0);
+                        mFrame.setL((float) 0.0);
 //                        System.out.printf("\nSetL : %f\n", seekBarC.getProgress()/100.0f - 1);
 
-                        if(mTrack106){
-                            mMultiTrack106.FaceTrackingInit(mNv21Data,CameraOverlap.PREVIEW_HEIGHT,CameraOverlap.PREVIEW_WIDTH);
+                        if (mTrack106) {
+                            mMultiTrack106.FaceTrackingInit(mNv21Data, CameraOverlap.PREVIEW_HEIGHT, CameraOverlap.PREVIEW_WIDTH);
                             mTrack106 = !mTrack106;
-                        }else {
-                            mMultiTrack106.Update(mNv21Data, CameraOverlap.PREVIEW_HEIGHT,CameraOverlap.PREVIEW_WIDTH);
+                        } else {
+                            mMultiTrack106.Update(mNv21Data, CameraOverlap.PREVIEW_HEIGHT, CameraOverlap.PREVIEW_WIDTH);
                         }
                         boolean rotate270 = cameraOverlap.getOrientation() == 270;
 
@@ -211,60 +245,126 @@ public class MainActivity extends AppCompatActivity {
                         float[] points = null;
 //                        Point dot on faceshape
                         for (Face r : faceActions) {
-                            points = new float[106*2];
-                            Rect rect=new Rect(CameraOverlap.PREVIEW_HEIGHT - r.left,r.top,CameraOverlap.PREVIEW_HEIGHT - r.right,r.bottom);
-                            for(int i = 0 ; i < 106 ; i++) {
+                            points = new float[106 * 2];
+                            Rect rect = new Rect(CameraOverlap.PREVIEW_HEIGHT - r.left, r.top, CameraOverlap.PREVIEW_HEIGHT - r.right, r.bottom);
+                            for (int i = 0; i < 106; i++) {
                                 int x;
                                 if (rotate270) {
-                                    x = r.landmarks[i*2];
-                                }else{
-                                    x = CameraOverlap.PREVIEW_HEIGHT-r.landmarks[i*2];
+                                    x = r.landmarks[i * 2];
+                                } else {
+                                    x = CameraOverlap.PREVIEW_HEIGHT - r.landmarks[i * 2];
                                 }
-                                int y = r.landmarks[i*2+1];
-                                points[i*2] = view2openglX(x,CameraOverlap.PREVIEW_HEIGHT);
-                                points[i*2+1] = view2openglY(y,CameraOverlap.PREVIEW_WIDTH);
-                                if(i == 70){
+                                int y = r.landmarks[i * 2 + 1];
+                                points[i * 2] = view2openglX(x, CameraOverlap.PREVIEW_HEIGHT);
+                                points[i * 2 + 1] = view2openglY(y, CameraOverlap.PREVIEW_WIDTH);
+                                if (i == 70) {
                                     p = new float[8];
-                                    p[0] = view2openglX(x + 20,CameraOverlap.PREVIEW_HEIGHT);
-                                    p[1] = view2openglY(y - 20,CameraOverlap.PREVIEW_WIDTH);
-                                    p[2] = view2openglX(x - 20,CameraOverlap.PREVIEW_HEIGHT);
-                                    p[3] = view2openglY(y - 20,CameraOverlap.PREVIEW_WIDTH);
-                                    p[4] = view2openglX(x + 20,CameraOverlap.PREVIEW_HEIGHT);
-                                    p[5] = view2openglY(y + 20,CameraOverlap.PREVIEW_WIDTH);
-                                    p[6] = view2openglX(x - 20,CameraOverlap.PREVIEW_HEIGHT);
-                                    p[7] = view2openglY(y + 20,CameraOverlap.PREVIEW_WIDTH);
+                                    p[0] = view2openglX(x + 20, CameraOverlap.PREVIEW_HEIGHT);
+                                    p[1] = view2openglY(y - 20, CameraOverlap.PREVIEW_WIDTH);
+                                    p[2] = view2openglX(x - 20, CameraOverlap.PREVIEW_HEIGHT);
+                                    p[3] = view2openglY(y - 20, CameraOverlap.PREVIEW_WIDTH);
+                                    p[4] = view2openglX(x + 20, CameraOverlap.PREVIEW_HEIGHT);
+                                    p[5] = view2openglY(y + 20, CameraOverlap.PREVIEW_WIDTH);
+                                    p[6] = view2openglX(x - 20, CameraOverlap.PREVIEW_HEIGHT);
+                                    p[7] = view2openglY(y + 20, CameraOverlap.PREVIEW_WIDTH);
                                 }
                             }
-                            if(p != null){
+                            if (p != null) {
                                 break;
                             }
                         }
                         int tid = 0;
-                        if(p != null){
-//                            mBitmap.setPoints(p);
+                        if (p != null) {
+                            mBitmap.setPoints(p);
 //                            tid = mBitmap.drawFrame();
                         }
                         mFrame.drawFrame(tid,mFramebuffer.drawFrameBuffer(),mFramebuffer.getMatrix());
-                        if(points != null){
+                        if (points != null) {
                             mPoints.setPoints(points);
-                            mPoints.drawPoints();
+//                            mPoints.drawPoints();
                         }
                         mEglUtils.swap();
 
                     }
                 });
+
+                if(mSocket.connected()) {
+                    System.out.println("Connected!!");
+                }
+                else{
+                    System.out.println(mSocket.connected());
+                }
+                JSONObject testHi  = new JSONObject();
+                try {
+                    testHi.put("greet","Hi Server!!!");
+                    System.out.printf("testHI : %s",testHi.toString());
+                    mSocket.emit("hi",testHi);
+                }
+                catch (JSONException e) {
+                    Log.e("err", e.toString());
+                    System.out.println("Can`t send massage to server");
+                }
+
+                if(touched){
+                    String dataString = data.toString();
+                    JSONObject jsonObject = new JSONObject();
+                    try{
+                        jsonObject.put("data",dataString);
+                        System.out.printf("jsonObject : %s",jsonObject.toString());
+                    }
+                    catch (JSONException e){
+                        Log.e("JSONerr",e.toString());
+                    }
+
+                    if(mSocket.connected()){
+                        mSocket.send(jsonObject);
+                    }
+                }
+//                if(allowedCapture){
+//                    int format = camera.getParameters().getPreviewFormat();
+//                    System.out.printf("format : %s",format);
+//                    int w = camera.getParameters().getPreviewSize().width;
+//                    int h = camera.getParameters().getPreviewSize().height;
+//
+//                    YuvImage yuvImage = new YuvImage(data, format, w, h, null);
+//                    Rect rect = new Rect(0, 0, w, h);
+//                    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+//                    yuvImage.compressToJpeg(rect, 100, outputStream);
+//
+//                    bitmap = BitmapFactory.decodeByteArray(outputStream.toByteArray(), 0, outputStream.size());
+//
+//
+//                    System.out.println("just test-1");
+//                    if(bitmap != null){
+//                        FileOutputStream outputStream1;
+//                        System.out.println("just test0");
+//                        try {
+//                            String filePath = "/sdcard/DCIM/Camera/test.jpg";
+//                            System.out.printf("filepath : %s",filePath);
+//                            File imageFile = new File(filePath);
+//                            outputStream1 = new FileOutputStream(imageFile);
+//                            bitmap.compress(Bitmap.CompressFormat.JPEG, 80, outputStream1);
+//                            outputStream1.flush();
+//                            outputStream1.close();
+//                            System.out.println("just test");
+//                        }
+//                        catch (FileNotFoundException e) {
+//                            System.out.println("just test2");
+//                            Log.e("Log", e.toString());
+//                        }
+//                        catch (IOException e) {
+//                            System.out.println("just test3");
+//                            Log.e("Log", e.toString());
+//                        }
+//                    }
+//                    else{
+//                        System.out.println("bitmap is null");
+//                    }
+//                    allowedCapture = false;
+//                }
             }
         });
-        View.OnClickListener listener = new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                System.out.println("Button On Click");
-//                mPoints.drawPoints();
-                mPoints.renderPoints();
-            }
-        };
-        captureTest = findViewById(R.id.captureTest);
-        captureTest.setOnClickListener(listener);
+
         mSurfaceView = findViewById(R.id.surface_view);
         mSurfaceView.getHolder().addCallback(new SurfaceHolder.Callback() {
             @Override
@@ -346,4 +446,28 @@ public class MainActivity extends AppCompatActivity {
         return s/centerY;
     }
 
+    private Emitter.Listener onConnect = new Emitter.Listener() {
+        @Override
+        public void call(Object... args) {
+//            JSONObject tested = new JSONObject();
+//            try{
+//                tested.put("hi","Hi Server!!!");
+//                System.out.println("Make Hi!!!");
+//            }
+//            catch (JSONException e){
+//                Log.e("error", e.toString());
+//            }
+//            mSocket.emit("greet",tested);
+            System.out.println(args.toString());
+        }
+    };
+
+    private Emitter.Listener onError = new Emitter.Listener() {
+        @Override
+        public void call(Object... args) {
+            Object s = args;
+            Log.e("error",s.toString());
+            Log.e("error","holy shit....TT");
+        }
+    };
 }
