@@ -22,19 +22,13 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
-import java.net.URISyntaxException;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
-import io.socket.client.IO;
-import io.socket.client.Socket;
-import io.socket.emitter.Emitter;
 import zeusees.tracking.Face;
 import zeusees.tracking.FaceTracking;
 
@@ -94,28 +88,12 @@ public class MainActivity extends AppCompatActivity {
     private FaceTracking mMultiTrack106 = null;
     private boolean mTrack106 = false;
 
-    private Socket mSocket;
-    {
-        try{
-//            mSocket = IO.socket("http://15.164.221.69:5000");
-            mSocket = IO.socket("https://echo.websocket.org/");
-            System.out.println(mSocket.id());
-        }
-        catch (URISyntaxException e){
-            Log.e("err",e.toString());
-            System.out.println("Can't Connect");
-        }
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        mSocket.on(Socket.EVENT_CONNECT,onConnect);
-        mSocket.on(Socket.EVENT_CONNECT_ERROR,onError);
-        mSocket.on(Socket.EVENT_CONNECT_TIMEOUT,onError);
-        mSocket.on(Socket.EVENT_DISCONNECT,onError);
-        mSocket.connect();
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             ArrayList<String> list = new ArrayList<>();
             for (int i = 0; i < permissions.length; i++) {
@@ -177,6 +155,7 @@ public class MainActivity extends AppCompatActivity {
     private GLFrame mFrame;
     private GLPoints mPoints;
     private GLBitmap mBitmap;
+    private jjWebsocket mSocket;
 
 //    private boolean allowedCapture;
     private boolean touched;
@@ -207,6 +186,9 @@ public class MainActivity extends AppCompatActivity {
         mFrame = new GLFrame();
         mPoints = new GLPoints();
         mBitmap = new GLBitmap(this,R.drawable.ic_logo);
+        mSocket = new jjWebsocket();
+
+        mSocket.init();
         mHandlerThread = new HandlerThread("DrawFacePointsThread");
         mHandlerThread.start();
         mHandler = new Handler(mHandlerThread.getLooper());
@@ -288,37 +270,20 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
 
-                if(mSocket.connected()) {
-                    System.out.println("Connected!!");
-                }
-                else{
-                    System.out.println(mSocket.connected());
-                }
-                JSONObject testHi  = new JSONObject();
-                try {
-                    testHi.put("greet","Hi Server!!!");
-                    System.out.printf("testHI : %s",testHi.toString());
-                    mSocket.emit("hi",testHi);
-                }
-                catch (JSONException e) {
-                    Log.e("err", e.toString());
-                    System.out.println("Can`t send massage to server");
-                }
-
                 if(touched){
-                    String dataString = data.toString();
-                    JSONObject jsonObject = new JSONObject();
-                    try{
-                        jsonObject.put("data",dataString);
-                        System.out.printf("jsonObject : %s",jsonObject.toString());
+                    char[] sendData = new char[data.length];
+                    try {
+                        String dataString = new String(data, "UTF-8");
+                        sendData = dataString.toCharArray();
                     }
-                    catch (JSONException e){
-                        Log.e("JSONerr",e.toString());
+                    catch (UnsupportedEncodingException e){
+                        System.out.println("UnsupportedEncodingException : " + e.toString());
                     }
 
                     if(mSocket.connected()){
-                        mSocket.send(jsonObject);
+                        mSocket.send(sendData);
                     }
+                    touched = false;
                 }
 //                if(allowedCapture){
 //                    int format = camera.getParameters().getPreviewFormat();
@@ -445,29 +410,4 @@ public class MainActivity extends AppCompatActivity {
         float s = centerY - y;
         return s/centerY;
     }
-
-    private Emitter.Listener onConnect = new Emitter.Listener() {
-        @Override
-        public void call(Object... args) {
-//            JSONObject tested = new JSONObject();
-//            try{
-//                tested.put("hi","Hi Server!!!");
-//                System.out.println("Make Hi!!!");
-//            }
-//            catch (JSONException e){
-//                Log.e("error", e.toString());
-//            }
-//            mSocket.emit("greet",tested);
-            System.out.println(args.toString());
-        }
-    };
-
-    private Emitter.Listener onError = new Emitter.Listener() {
-        @Override
-        public void call(Object... args) {
-            Object s = args;
-            Log.e("error",s.toString());
-            Log.e("error","holy shit....TT");
-        }
-    };
 }
