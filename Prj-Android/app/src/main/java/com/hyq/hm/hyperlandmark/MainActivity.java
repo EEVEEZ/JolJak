@@ -4,11 +4,13 @@ import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.graphics.Rect;
 import android.graphics.YuvImage;
 import android.hardware.Camera;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -22,6 +24,7 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.ByteArrayOutputStream;
@@ -89,12 +92,36 @@ public class MainActivity extends AppCompatActivity {
 
     private FaceTracking mMultiTrack106 = null;
     private boolean mTrack106 = false;
+    private int count = 2;
+    private TextView textView;
+    private boolean touched;
+    private boolean countdown;
+
+    CountDownTimer countDownTimer = new CountDownTimer(2500,1000) {
+        @Override
+        public void onTick(long millisUntilFinished) {
+            countdown = false;
+            textView.setVisibility(View.VISIBLE);
+            textView.setText(String.valueOf(count));
+            count--;
+        }
+
+        @Override
+        public void onFinish() {
+            count = 2;
+            textView.setVisibility(View.INVISIBLE);
+            touched = false;
+        }
+    };
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        textView = findViewById(R.id.CountTextView);
+        textView.setVisibility(View.INVISIBLE);
+        textView.setTextColor(Color.parseColor("#FF0000"));
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             ArrayList<String> list = new ArrayList<>();
@@ -158,9 +185,9 @@ public class MainActivity extends AppCompatActivity {
     private GLPoints mPoints;
     private GLBitmap mBitmap;
     private jjWebsocket mSocket;
+    private int getCount = 0;
 
 //    private boolean allowedCapture;
-    private boolean touched;
 
     private Button CaptureButton;
 
@@ -171,6 +198,7 @@ public class MainActivity extends AppCompatActivity {
             toast.show();
 //            allowedCapture = true;
             touched = true;
+            countdown = true;
         }
     };
 
@@ -239,7 +267,7 @@ public class MainActivity extends AppCompatActivity {
                                     x = CameraOverlap.PREVIEW_HEIGHT - r.landmarks[i * 2];
                                 }
                                 int y = r.landmarks[i * 2 + 1];
-                                points[i * 2] = view2openglX(x, CameraOverlap.PREVIEW_HEIGHT);r
+                                points[i * 2] = view2openglX(x, CameraOverlap.PREVIEW_HEIGHT);
                                 points[i * 2 + 1] = view2openglY(y, CameraOverlap.PREVIEW_WIDTH);
                                 if (i == 70) {
                                     p = new float[8];
@@ -265,7 +293,7 @@ public class MainActivity extends AppCompatActivity {
                         mFrame.drawFrame(tid,mFramebuffer.drawFrameBuffer(),mFramebuffer.getMatrix());
                         if (points != null) {
                             mPoints.setPoints(points);
-                            mPoints.drawPoints();
+//                            mPoints.drawPoints();
                         }
                         mEglUtils.swap();
 //                        if(points!= null) {
@@ -276,10 +304,16 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
 
+                if(countdown){
+                    countDownTimer.start();
+                    mSocket.send("Ready");
+                }
+
                 if(touched){
+                    getCount++;
                     String temp=null;
                     int format = camera.getParameters().getPreviewFormat();
-                    System.out.printf("format : %s",format);
+//                    System.out.printf("format : %s",format);
                     int w = camera.getParameters().getPreviewSize().width;
                     int h = camera.getParameters().getPreviewSize().height;
                     byte[] yuv = rotateYUV420Degree270(data,w,h);
@@ -299,10 +333,9 @@ public class MainActivity extends AppCompatActivity {
                         Log.e("EWN", "Out of memory error catched");
                     }
 
-                    if(mSocket.connected()){
+                    if(mSocket.connected() && getCount % 2 == 0){
                         mSocket.send(temp);
                     }
-                    touched = false;
                 }
 //                if(allowedCapture){
 //                    int format = camera.getParameters().getPreviewFormat();

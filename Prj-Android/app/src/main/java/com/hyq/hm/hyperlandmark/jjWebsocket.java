@@ -3,9 +3,6 @@ package com.hyq.hm.hyperlandmark;
 import android.os.AsyncTask;
 import android.util.Log;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.net.URISyntaxException;
 
 import io.socket.client.IO;
@@ -27,7 +24,6 @@ public class jjWebsocket extends AsyncTask<String, String, Long> {
             IO.Options options = new IO.Options();
             options.transports = new String[] {WebSocket.NAME};
             mSocket = IO.socket("http://15.164.221.69:5000",options);
-//            mSocket = IO.socket("https://echo.websocket.org/.",options);
         }
         catch (URISyntaxException e){
             Log.e("err",e.toString());
@@ -50,14 +46,13 @@ public class jjWebsocket extends AsyncTask<String, String, Long> {
 
     public void send(String Data){
         System.out.println(Data);
-        JSONObject Senddata = new JSONObject();
-        try {
-            Senddata.put("data", Data);
+        switch (Data){
+            case "Ready":
+                mSocket.emit("Ready","Ready to take a data...");
+                break;
+            default:
+                mSocket.emit("PreviewData",Data);
         }
-        catch (JSONException e){
-            System.out.println(e.toString());
-        }
-        mSocket.emit("PreviewData",Data);
     }
 
     public void disconnect(){

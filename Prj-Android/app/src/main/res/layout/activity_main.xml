@@ -18,6 +18,16 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Capture" />
+
+        <TextView
+            android:id="@+id/CountTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_centerVertical="true"
+            android:text="Count"
+            android:textSize="30sp"
+            android:textStyle="bold" />
     </com.hyq.hm.hyperlandmark.FixedAspectRatioRelativeLayout>
 
     <FrameLayout
