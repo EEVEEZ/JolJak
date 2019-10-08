@@ -63,11 +63,6 @@ public class GLPoints {
         GLES20.glDrawArrays(GLES20.GL_POINTS, 0, 106);
     }
 
-    public void renderPoints(){
-        drawPoints();
-        GLES20.glDrawArrays(GLES20.GL_POINTS, 0, 106);
-    }
-
     public void release(){
         GLES20.glDeleteProgram(programId);
         GLES20.glDeleteBuffers(1,vertexBuffers,0);

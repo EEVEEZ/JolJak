@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Rect;
+import android.graphics.YuvImage;
 import android.hardware.Camera;
 import android.os.Build;
 import android.os.Bundle;
@@ -15,6 +16,7 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.PermissionChecker;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Base64;
 import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -22,10 +24,10 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -237,7 +239,7 @@ public class MainActivity extends AppCompatActivity {
                                     x = CameraOverlap.PREVIEW_HEIGHT - r.landmarks[i * 2];
                                 }
                                 int y = r.landmarks[i * 2 + 1];
-                                points[i * 2] = view2openglX(x, CameraOverlap.PREVIEW_HEIGHT);
+                                points[i * 2] = view2openglX(x, CameraOverlap.PREVIEW_HEIGHT);r
                                 points[i * 2 + 1] = view2openglY(y, CameraOverlap.PREVIEW_WIDTH);
                                 if (i == 70) {
                                     p = new float[8];
@@ -263,25 +265,42 @@ public class MainActivity extends AppCompatActivity {
                         mFrame.drawFrame(tid,mFramebuffer.drawFrameBuffer(),mFramebuffer.getMatrix());
                         if (points != null) {
                             mPoints.setPoints(points);
-//                            mPoints.drawPoints();
+                            mPoints.drawPoints();
                         }
                         mEglUtils.swap();
-
+//                        if(points!= null) {
+//                            for (int i = 0; i < 106 * 2; i++) {
+//                                System.out.printf("point[%d] = %f\n", i, points[i]);
+//                            }
+//                        }
                     }
                 });
 
                 if(touched){
-                    char[] sendData = new char[data.length];
-                    try {
-                        String dataString = new String(data, "UTF-8");
-                        sendData = dataString.toCharArray();
-                    }
-                    catch (UnsupportedEncodingException e){
-                        System.out.println("UnsupportedEncodingException : " + e.toString());
+                    String temp=null;
+                    int format = camera.getParameters().getPreviewFormat();
+                    System.out.printf("format : %s",format);
+                    int w = camera.getParameters().getPreviewSize().width;
+                    int h = camera.getParameters().getPreviewSize().height;
+                    byte[] yuv = rotateYUV420Degree270(data,w,h);
+
+                    YuvImage yuvImage = new YuvImage(yuv, format, h, w, null);
+                    Rect rect = new Rect(0, 0, h, w);
+                    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+                    yuvImage.compressToJpeg(rect, 100, outputStream);
+                    byte[] arr = outputStream.toByteArray();
+                    try{
+                        System.gc();
+                        temp= Base64.encodeToString(arr, Base64.DEFAULT);
+                    }catch(Exception e){
+                        e.printStackTrace();
+                    }catch(OutOfMemoryError e){
+                        temp=Base64.encodeToString(arr, Base64.DEFAULT);
+                        Log.e("EWN", "Out of memory error catched");
                     }
 
                     if(mSocket.connected()){
-                        mSocket.send(sendData);
+                        mSocket.send(temp);
                     }
                     touched = false;
                 }
@@ -409,5 +428,80 @@ public class MainActivity extends AppCompatActivity {
         float centerY = height/2.0f;
         float s = centerY - y;
         return s/centerY;
+    }
+
+    public static byte[] rotateYUV420Degree90(byte[] data, int imageWidth, int imageHeight) {
+        byte[] yuv = new byte[imageWidth * imageHeight * 3 / 2];
+        // Rotate the Y luma
+        int i = 0;
+        for (int x = 0; x < imageWidth; x++) {
+            for (int y = imageHeight - 1; y >= 0; y--) {
+                yuv[i] = data[y * imageWidth + x];
+                i++;
+            }
+        }
+        // Rotate the U and V color components
+        i = imageWidth * imageHeight * 3 / 2 - 1;
+        for (int x = imageWidth - 1; x > 0; x = x - 2) {
+            for (int y = 0; y < imageHeight / 2; y++) {
+                yuv[i] = data[(imageWidth * imageHeight) + (y * imageWidth) + x];
+                i--;
+                yuv[i] = data[(imageWidth * imageHeight) + (y * imageWidth)
+                        + (x - 1)];
+                i--;
+            }
+        }
+        return yuv;
+    }
+
+    private static byte[] rotateYUV420Degree180(byte[] data, int imageWidth, int imageHeight) {
+        byte[] yuv = new byte[imageWidth * imageHeight * 3 / 2];
+        int i = 0;
+        int count = 0;
+        for (i = imageWidth * imageHeight - 1; i >= 0; i--) {
+            yuv[count] = data[i];
+            count++;
+        }
+        i = imageWidth * imageHeight * 3 / 2 - 1;
+        for (i = imageWidth * imageHeight * 3 / 2 - 1; i >= imageWidth
+                * imageHeight; i -= 2) {
+            yuv[count++] = data[i - 1];
+            yuv[count++] = data[i];
+        }
+        return yuv;
+    }
+
+    public static byte[] rotateYUV420Degree270(byte[] data, int imageWidth,
+                                               int imageHeight) {
+        byte[] yuv = new byte[imageWidth * imageHeight * 3 / 2];
+        int nWidth = 0, nHeight = 0;
+        int wh = 0;
+        int uvHeight = 0;
+        if (imageWidth != nWidth || imageHeight != nHeight) {
+            nWidth = imageWidth;
+            nHeight = imageHeight;
+            wh = imageWidth * imageHeight;
+            uvHeight = imageHeight >> 1;// uvHeight = height / 2
+        }
+        // ??Y
+        int k = 0;
+        for (int i = 0; i < imageWidth; i++) {
+            int nPos = 0;
+            for (int j = 0; j < imageHeight; j++) {
+                yuv[k] = data[nPos + i];
+                k++;
+                nPos += imageWidth;
+            }
+        }
+        for (int i = 0; i < imageWidth; i += 2) {
+            int nPos = wh;
+            for (int j = 0; j < uvHeight; j++) {
+                yuv[k] = data[nPos + i];
+                yuv[k + 1] = data[nPos + i + 1];
+                k += 2;
+                nPos += imageWidth;
+            }
+        }
+        return rotateYUV420Degree180(yuv, imageWidth, imageHeight);
     }
 }

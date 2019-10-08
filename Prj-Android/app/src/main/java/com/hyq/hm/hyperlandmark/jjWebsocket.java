@@ -3,6 +3,9 @@ package com.hyq.hm.hyperlandmark;
 import android.os.AsyncTask;
 import android.util.Log;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.net.URISyntaxException;
 
 import io.socket.client.IO;
@@ -45,8 +48,15 @@ public class jjWebsocket extends AsyncTask<String, String, Long> {
         return mSocket.connected();
     }
 
-    public void send(char[] Data){
+    public void send(String Data){
         System.out.println(Data);
+        JSONObject Senddata = new JSONObject();
+        try {
+            Senddata.put("data", Data);
+        }
+        catch (JSONException e){
+            System.out.println(e.toString());
+        }
         mSocket.emit("PreviewData",Data);
     }
 
@@ -84,6 +94,7 @@ public class jjWebsocket extends AsyncTask<String, String, Long> {
         @Override
         public void call(Object... args) {
             Log.e("error","Error Occured!!");
+            Log.e("error",args[0].toString());
         }
     };
 }
