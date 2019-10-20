@@ -17,7 +17,7 @@
             android:id="@+id/Capture"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Capture" />
+            android:text="@string/capture" />
 
         <TextView
             android:id="@+id/CountTextView"
@@ -25,9 +25,16 @@
             android:layout_height="wrap_content"
             android:layout_centerHorizontal="true"
             android:layout_centerVertical="true"
-            android:text="Count"
+            android:text="@string/count"
             android:textSize="30sp"
             android:textStyle="bold" />
+
+        <Button
+            android:id="@+id/Web_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignEnd="@id/surface_view"
+            android:text="@string/web" />
     </com.hyq.hm.hyperlandmark.FixedAspectRatioRelativeLayout>
 
     <FrameLayout

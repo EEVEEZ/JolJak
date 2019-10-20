@@ -11,19 +11,19 @@ import io.socket.emitter.Emitter;
 import io.socket.engineio.client.transports.WebSocket;
 
 
-public class jjWebsocket extends AsyncTask<String, String, Long> {
-    private Socket mSocket;
+        public class jjWebsocket extends AsyncTask<String, String, Long> {
+            private Socket mSocket;
 
-    @Override
-    protected Long doInBackground(String... strings) {
-        return null;
-    }
+            @Override
+            protected Long doInBackground(String... strings) {
+                return null;
+            }
 
-    public void init(){
+            public void init(){
         try{
             IO.Options options = new IO.Options();
             options.transports = new String[] {WebSocket.NAME};
-            mSocket = IO.socket("http://15.164.221.69:5000",options);
+            mSocket = IO.socket("http://54.180.122.119:5000",options);
         }
         catch (URISyntaxException e){
             Log.e("err",e.toString());

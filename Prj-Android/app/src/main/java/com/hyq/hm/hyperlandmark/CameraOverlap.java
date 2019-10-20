@@ -2,11 +2,8 @@ package com.hyq.hm.hyperlandmark;
 
 import android.content.Context;
 import android.content.res.Configuration;
-import android.graphics.Matrix;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
-import android.util.Log;
-import android.view.SurfaceHolder;
 
 import java.util.List;
 
@@ -90,7 +87,7 @@ public class CameraOverlap {
 
                 if (context.getResources().getConfiguration().orientation != Configuration.ORIENTATION_LANDSCAPE) {
                     parameters.set("orientation", "portrait");
-                    parameters.set("rotation", 90);
+                    parameters.set("rotation", 0);
 
                     int orientation = CameraFacing == Camera.CameraInfo.CAMERA_FACING_FRONT ? 360 - mCameraInfo.orientation : mCameraInfo.orientation;
                     mCamera.setDisplayOrientation(orientation);

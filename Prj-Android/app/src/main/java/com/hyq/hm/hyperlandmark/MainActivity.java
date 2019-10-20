@@ -2,6 +2,7 @@ package com.hyq.hm.hyperlandmark;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Color;
@@ -123,6 +124,15 @@ public class MainActivity extends AppCompatActivity {
         textView.setVisibility(View.INVISIBLE);
         textView.setTextColor(Color.parseColor("#FF0000"));
 
+        Button Webbutton = findViewById(R.id.Web_button);
+        Webbutton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getApplicationContext(),WebActivity.class);
+                startActivity(intent);
+            }
+        });
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             ArrayList<String> list = new ArrayList<>();
             for (int i = 0; i < permissions.length; i++) {
@@ -225,6 +235,7 @@ public class MainActivity extends AppCompatActivity {
         cameraOverlap.setPreviewCallback(new Camera.PreviewCallback() {
             @Override
             public void onPreviewFrame(byte[] data, Camera camera) {
+                getCount++;
                 synchronized (lockObj) {
                     System.arraycopy(data, 0, mNv21Data, 0, data.length);
                 }
@@ -293,7 +304,7 @@ public class MainActivity extends AppCompatActivity {
                         mFrame.drawFrame(tid,mFramebuffer.drawFrameBuffer(),mFramebuffer.getMatrix());
                         if (points != null) {
                             mPoints.setPoints(points);
-//                            mPoints.drawPoints();
+                            mPoints.drawPoints();
                         }
                         mEglUtils.swap();
 //                        if(points!= null) {
@@ -310,15 +321,14 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 if(touched){
-                    getCount++;
                     String temp=null;
                     int format = camera.getParameters().getPreviewFormat();
 //                    System.out.printf("format : %s",format);
                     int w = camera.getParameters().getPreviewSize().width;
                     int h = camera.getParameters().getPreviewSize().height;
-                    byte[] yuv = rotateYUV420Degree270(data,w,h);
+//                    byte[] yuv = rotateYUV420Degree270(data,w,h);
 
-                    YuvImage yuvImage = new YuvImage(yuv, format, h, w, null);
+                    YuvImage yuvImage = new YuvImage(/*yuv*/data, format, h, w, null);
                     Rect rect = new Rect(0, 0, h, w);
                     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
                     yuvImage.compressToJpeg(rect, 100, outputStream);
@@ -337,6 +347,8 @@ public class MainActivity extends AppCompatActivity {
                         mSocket.send(temp);
                     }
                 }
+
+//                System.out.printf("getcount : %d\n",getCount);
 //                if(allowedCapture){
 //                    int format = camera.getParameters().getPreviewFormat();
 //                    System.out.printf("format : %s",format);
