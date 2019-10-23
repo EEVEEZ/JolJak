@@ -1,18 +1,15 @@
 package com.hyq.hm.hyperlandmark;
 
 import android.Manifest;
+import android.app.Activity;
+import android.app.ActivityManager;
 import android.content.Context;
-import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.graphics.Color;
-import android.graphics.Rect;
-import android.graphics.YuvImage;
-import android.hardware.Camera;
+import android.media.Image;
 import android.os.Build;
+import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
-import android.os.CountDownTimer;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.support.annotation.NonNull;
@@ -21,117 +18,75 @@ import android.support.v4.content.PermissionChecker;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Base64;
 import android.util.Log;
-import android.view.SurfaceHolder;
-import android.view.SurfaceView;
+import android.view.PixelCopy;
 import android.view.View;
 import android.widget.Button;
-import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.ar.core.AugmentedFace;
+import com.google.ar.core.Frame;
+import com.google.ar.core.Session;
+import com.google.ar.core.TrackingState;
+import com.google.ar.core.exceptions.CameraNotAvailableException;
+import com.google.ar.core.exceptions.NotYetAvailableException;
+import com.google.ar.sceneform.ArSceneView;
+import com.google.ar.sceneform.FrameTime;
+import com.google.ar.sceneform.Scene;
+import com.google.ar.sceneform.rendering.ModelRenderable;
+import com.google.ar.sceneform.rendering.Renderable;
+import com.google.ar.sceneform.samples.hellosceneform.R;
+import com.google.ar.sceneform.ux.AugmentedFaceNode;
+
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.List;
-
-import zeusees.tracking.Face;
-import zeusees.tracking.FaceTracking;
-
-//import java.net.Socket;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
+    private static final String TAG = MainActivity.class.getSimpleName();
+    private static final double MIN_OPENGL_VERSION = 3.0;
 
-    public void copyFilesFromAssets(Context context, String oldPath, String newPath) {
-        try {
-            String[] fileNames = context.getAssets().list(oldPath);
-            if (fileNames.length > 0) {
-                // directory
-                File file = new File(newPath);
-                if (!file.mkdir())
-                {
-                    Log.d("mkdir","can't make folder");
+    private final Object frameImageInUseLock = new Object();
 
-                }
+    private FaceArFragment arFragment;
+    private ModelRenderable faceRegionsRenderable;
+    private final HashMap<AugmentedFace, AugmentedFaceNode> faceNodeMap = new HashMap<>();
 
-                for (String fileName : fileNames) {
-                    copyFilesFromAssets(context, oldPath + "/" + fileName,
-                            newPath + "/" + fileName);
-                }
-            } else {
-                // file
-                InputStream is = context.getAssets().open(oldPath);
-                FileOutputStream fos = new FileOutputStream(new File(newPath));
-                byte[] buffer = new byte[1024];
-                int byteCount;
-                while ((byteCount = is.read(buffer)) != -1) {
-                    fos.write(buffer, 0, byteCount);
-                }
-                fos.flush();
-                is.close();
-                fos.close();
-            }
-        } catch (Exception e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-    }
+    private Session session;
+    private ArSceneView sceneView;
 
-    void InitModelFiles()
-    {
-
-        String assetPath = "ZeuseesFaceTracking";
-        String sdcardPath = Environment.getExternalStorageDirectory()
-                + File.separator + assetPath;
-        copyFilesFromAssets(this, assetPath, sdcardPath);
-
-    }
-
+    private Button button;
+    private boolean touched;
+    private boolean ready;
+    private int count;
 
     private String[] denied;
-    private String[] permissions = {Manifest.permission.WRITE_EXTERNAL_STORAGE,Manifest.permission.CAMERA,Manifest.permission.INTERNET};
+    private String[] permissions = {Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CAMERA, Manifest.permission.INTERNET};
 
-    private FaceTracking mMultiTrack106 = null;
-    private boolean mTrack106 = false;
-    private int count = 2;
-    private TextView textView;
-    private boolean touched;
-    private boolean countdown;
+    public jjWebsocket mWebsocket;
 
-    CountDownTimer countDownTimer = new CountDownTimer(2500,1000) {
+    View.OnClickListener listener = new View.OnClickListener() {
         @Override
-        public void onTick(long millisUntilFinished) {
-            countdown = false;
-            textView.setVisibility(View.VISIBLE);
-            textView.setText(String.valueOf(count));
-            count--;
-        }
-
-        @Override
-        public void onFinish() {
-            count = 2;
-            textView.setVisibility(View.INVISIBLE);
-            touched = false;
+        public void onClick(View view) {
+            Toast toast = Toast.makeText(getApplicationContext(), "Caputured", Toast.LENGTH_LONG);
+            toast.show();
+//            allowedCapture = true;
+            touched = true;
+            ready = true;
+            count = 0;
         }
     };
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        textView = findViewById(R.id.CountTextView);
-        textView.setVisibility(View.INVISIBLE);
-        textView.setTextColor(Color.parseColor("#FF0000"));
 
-        Button Webbutton = findViewById(R.id.Web_button);
-        Webbutton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(getApplicationContext(),WebActivity.class);
-                startActivity(intent);
-            }
-        });
+        if (!checkIsSupportedDeviceOrFinish(this)) {
+            return;
+        }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             ArrayList<String> list = new ArrayList<>();
@@ -146,14 +101,106 @@ public class MainActivity extends AppCompatActivity {
                     denied[i] = list.get(i);
                 }
                 ActivityCompat.requestPermissions(this, denied, 5);
-            } else {
-                init();
             }
-        } else {
-            init();
         }
 
+        setContentView(R.layout.activity_main);
+        arFragment = (FaceArFragment) getSupportFragmentManager().findFragmentById(R.id.ux_fragment);
 
+        button = findViewById(R.id.Capture);
+        button.setOnClickListener(listener);
+
+        mWebsocket = new jjWebsocket();
+        mWebsocket.init();
+
+//        ModelRenderable.builder()
+//                .setSource(this, R.raw.fox_face)
+//                .build()
+//                .thenAccept(modelRenderable -> {
+//                    faceRegionsRenderable = modelRenderable;
+//                    modelRenderable.setShadowCaster(false);
+//                    modelRenderable.setShadowReceiver(false);
+//                });
+
+
+        sceneView = arFragment.getArSceneView();
+        sceneView.setCameraStreamRenderPriority(Renderable.RENDER_PRIORITY_FIRST);
+
+        Scene scene = sceneView.getScene();
+
+        scene.addOnUpdateListener(
+                (FrameTime frameTime) -> {
+                    Frame frame = null;
+                    try {
+                        frame = sceneView.getSession().update();
+                    } catch (CameraNotAvailableException e) {
+                        e.printStackTrace();
+                    }
+                    Log.v("FrameTime", Float.toString(frameTime.getStartSeconds()));
+                    byte[] temp = null;
+
+                    if(ready){
+                        mWebsocket.send("Ready");
+                        ready = false;
+                    }
+                    if (touched && count < 10) {
+                        count++;
+                        Bitmap bitmap = Bitmap.createBitmap(sceneView.getWidth(), sceneView.getHeight(), Bitmap.Config.ARGB_8888);
+                        final HandlerThread handlerThread = new HandlerThread("PixelCopier");
+                        handlerThread.start();
+                        PixelCopy.request(sceneView, bitmap, (copyResult) -> {
+                            if (copyResult == PixelCopy.SUCCESS) {
+                                ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+                                bitmap.compress(Bitmap.CompressFormat.JPEG,100,outputStream);
+                                byte[] compressedData = outputStream.toByteArray();
+                                String sendString = null;
+                                try {
+                                    System.gc();
+                                    sendString = Base64.encodeToString(compressedData, Base64.DEFAULT);
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                } catch (OutOfMemoryError e) {
+                                    sendString = Base64.encodeToString(compressedData, Base64.DEFAULT);
+                                    Log.e("EWN", "Out of memory error catched");
+                                }
+                                if (mWebsocket.connected()) {
+                                    mWebsocket.send(sendString);
+                                }
+                                touched = false;
+                            }
+                        }, new Handler(handlerThread.getLooper()));
+                    }
+
+                    if (faceRegionsRenderable == null) {
+                        return;
+                    }
+
+                    Collection<AugmentedFace> faceList =
+                            sceneView.getSession().getAllTrackables(AugmentedFace.class);
+
+                    // Make new AugmentedFaceNodes for any new faces.
+                    for (AugmentedFace face : faceList) {
+                        if (!faceNodeMap.containsKey(face)) {
+                            AugmentedFaceNode faceNode = new AugmentedFaceNode(face);
+                            faceNode.setParent(scene);
+                            faceNode.setFaceRegionsRenderable(faceRegionsRenderable);
+                            faceNodeMap.put(face, faceNode);
+                        }
+                    }
+
+                    // Remove any AugmentedFaceNodes associated with an AugmentedFace that stopped tracking.
+                    Iterator<Map.Entry<AugmentedFace, AugmentedFaceNode>> iter =
+                            faceNodeMap.entrySet().iterator();
+                    while (iter.hasNext()) {
+                        Map.Entry<AugmentedFace, AugmentedFaceNode> entry = iter.next();
+                        AugmentedFace face = entry.getKey();
+                        if (face.getTrackingState() == TrackingState.STOPPED) {
+                            AugmentedFaceNode faceNode = entry.getValue();
+                            faceNode.setParent(null);
+                            iter.remove();
+                        }
+                    }
+                });
     }
 
     @Override
@@ -171,308 +218,38 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
             }
-            if (isDenied) {
-                Toast.makeText(this, "请开启权限", Toast.LENGTH_SHORT).show();
-            } else {
-                init();
-
-            }
         }
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
-    private HandlerThread mHandlerThread;
-    private Handler mHandler;
-    private byte[] mNv21Data;
-    private CameraOverlap cameraOverlap;
-    private final Object lockObj = new Object();
-
-    private SurfaceView mSurfaceView;
-
-    private EGLUtils mEglUtils;
-    private GLFramebuffer mFramebuffer;
-    private GLFrame mFrame;
-    private GLPoints mPoints;
-    private GLBitmap mBitmap;
-    private jjWebsocket mSocket;
-    private int getCount = 0;
-
-//    private boolean allowedCapture;
-
-    private Button CaptureButton;
-
-    View.OnClickListener listener = new View.OnClickListener() {
-        @Override
-        public void onClick(View view) {
-            Toast toast = Toast.makeText(getApplicationContext(),"Caputured",Toast.LENGTH_LONG);
-            toast.show();
-//            allowedCapture = true;
-            touched = true;
-            countdown = true;
+    private Image imageFromFrame(Frame frame) throws NotYetAvailableException {
+        if (frame == null) {
+            Log.e("error", "Frame Is Null");
+            return null;
         }
-    };
-
-    private void init(){
-        InitModelFiles();
-
-        CaptureButton = findViewById(R.id.Capture);
-        CaptureButton.setOnClickListener(listener);
-
-        mMultiTrack106 = new FaceTracking("/sdcard/ZeuseesFaceTracking/models");
-
-        cameraOverlap = new CameraOverlap(this);
-        mNv21Data = new byte[CameraOverlap.PREVIEW_WIDTH * CameraOverlap.PREVIEW_HEIGHT * 2];
-        mFramebuffer = new GLFramebuffer();
-        mFrame = new GLFrame();
-        mPoints = new GLPoints();
-        mBitmap = new GLBitmap(this,R.drawable.ic_logo);
-        mSocket = new jjWebsocket();
-
-        mSocket.init();
-        mHandlerThread = new HandlerThread("DrawFacePointsThread");
-        mHandlerThread.start();
-        mHandler = new Handler(mHandlerThread.getLooper());
-        cameraOverlap.setPreviewCallback(new Camera.PreviewCallback() {
-            @Override
-            public void onPreviewFrame(byte[] data, Camera camera) {
-                getCount++;
-                synchronized (lockObj) {
-                    System.arraycopy(data, 0, mNv21Data, 0, data.length);
-                }
-
-                Bitmap bitmap = null;
-
-                mHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (mEglUtils == null) {
-                            return;
-                        }
-                        mFrame.setS((float) 1.0);
-//                        System.out.printf("\nSetS : %f\n", seekBarA.getProgress()/100.0f);
-                        mFrame.setH((float) 0.0);
-//                        System.out.printf("\nSetH : %f\n",seekBarB.getProgress()/360.0f);
-                        mFrame.setL((float) 0.0);
-//                        System.out.printf("\nSetL : %f\n", seekBarC.getProgress()/100.0f - 1);
-
-                        if (mTrack106) {
-                            mMultiTrack106.FaceTrackingInit(mNv21Data, CameraOverlap.PREVIEW_HEIGHT, CameraOverlap.PREVIEW_WIDTH);
-                            mTrack106 = !mTrack106;
-                        } else {
-                            mMultiTrack106.Update(mNv21Data, CameraOverlap.PREVIEW_HEIGHT, CameraOverlap.PREVIEW_WIDTH);
-                        }
-                        boolean rotate270 = cameraOverlap.getOrientation() == 270;
-
-                        List<Face> faceActions = mMultiTrack106.getTrackingInfo();
-                        float[] p = null;
-                        float[] points = null;
-//                        Point dot on faceshape
-                        for (Face r : faceActions) {
-                            points = new float[106 * 2];
-                            Rect rect = new Rect(CameraOverlap.PREVIEW_HEIGHT - r.left, r.top, CameraOverlap.PREVIEW_HEIGHT - r.right, r.bottom);
-                            for (int i = 0; i < 106; i++) {
-                                int x;
-                                if (rotate270) {
-                                    x = r.landmarks[i * 2];
-                                } else {
-                                    x = CameraOverlap.PREVIEW_HEIGHT - r.landmarks[i * 2];
-                                }
-                                int y = r.landmarks[i * 2 + 1];
-                                points[i * 2] = view2openglX(x, CameraOverlap.PREVIEW_HEIGHT);
-                                points[i * 2 + 1] = view2openglY(y, CameraOverlap.PREVIEW_WIDTH);
-                                if (i == 70) {
-                                    p = new float[8];
-                                    p[0] = view2openglX(x + 20, CameraOverlap.PREVIEW_HEIGHT);
-                                    p[1] = view2openglY(y - 20, CameraOverlap.PREVIEW_WIDTH);
-                                    p[2] = view2openglX(x - 20, CameraOverlap.PREVIEW_HEIGHT);
-                                    p[3] = view2openglY(y - 20, CameraOverlap.PREVIEW_WIDTH);
-                                    p[4] = view2openglX(x + 20, CameraOverlap.PREVIEW_HEIGHT);
-                                    p[5] = view2openglY(y + 20, CameraOverlap.PREVIEW_WIDTH);
-                                    p[6] = view2openglX(x - 20, CameraOverlap.PREVIEW_HEIGHT);
-                                    p[7] = view2openglY(y + 20, CameraOverlap.PREVIEW_WIDTH);
-                                }
-                            }
-                            if (p != null) {
-                                break;
-                            }
-                        }
-                        int tid = 0;
-                        if (p != null) {
-                            mBitmap.setPoints(p);
-//                            tid = mBitmap.drawFrame();
-                        }
-                        mFrame.drawFrame(tid,mFramebuffer.drawFrameBuffer(),mFramebuffer.getMatrix());
-                        if (points != null) {
-                            mPoints.setPoints(points);
-                            mPoints.drawPoints();
-                        }
-                        mEglUtils.swap();
-//                        if(points!= null) {
-//                            for (int i = 0; i < 106 * 2; i++) {
-//                                System.out.printf("point[%d] = %f\n", i, points[i]);
-//                            }
-//                        }
-                    }
-                });
-
-                if(countdown){
-                    countDownTimer.start();
-                    mSocket.send("Ready");
-                }
-
-                if(touched){
-                    String temp=null;
-                    int format = camera.getParameters().getPreviewFormat();
-//                    System.out.printf("format : %s",format);
-                    int w = camera.getParameters().getPreviewSize().width;
-                    int h = camera.getParameters().getPreviewSize().height;
-//                    byte[] yuv = rotateYUV420Degree270(data,w,h);
-
-                    YuvImage yuvImage = new YuvImage(/*yuv*/data, format, h, w, null);
-                    Rect rect = new Rect(0, 0, h, w);
-                    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-                    yuvImage.compressToJpeg(rect, 100, outputStream);
-                    byte[] arr = outputStream.toByteArray();
-                    try{
-                        System.gc();
-                        temp= Base64.encodeToString(arr, Base64.DEFAULT);
-                    }catch(Exception e){
-                        e.printStackTrace();
-                    }catch(OutOfMemoryError e){
-                        temp=Base64.encodeToString(arr, Base64.DEFAULT);
-                        Log.e("EWN", "Out of memory error catched");
-                    }
-
-                    if(mSocket.connected() && getCount % 2 == 0){
-                        mSocket.send(temp);
-                    }
-                }
-
-//                System.out.printf("getcount : %d\n",getCount);
-//                if(allowedCapture){
-//                    int format = camera.getParameters().getPreviewFormat();
-//                    System.out.printf("format : %s",format);
-//                    int w = camera.getParameters().getPreviewSize().width;
-//                    int h = camera.getParameters().getPreviewSize().height;
-//
-//                    YuvImage yuvImage = new YuvImage(data, format, w, h, null);
-//                    Rect rect = new Rect(0, 0, w, h);
-//                    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-//                    yuvImage.compressToJpeg(rect, 100, outputStream);
-//
-//                    bitmap = BitmapFactory.decodeByteArray(outputStream.toByteArray(), 0, outputStream.size());
-//
-//
-//                    System.out.println("just test-1");
-//                    if(bitmap != null){
-//                        FileOutputStream outputStream1;
-//                        System.out.println("just test0");
-//                        try {
-//                            String filePath = "/sdcard/DCIM/Camera/test.jpg";
-//                            System.out.printf("filepath : %s",filePath);
-//                            File imageFile = new File(filePath);
-//                            outputStream1 = new FileOutputStream(imageFile);
-//                            bitmap.compress(Bitmap.CompressFormat.JPEG, 80, outputStream1);
-//                            outputStream1.flush();
-//                            outputStream1.close();
-//                            System.out.println("just test");
-//                        }
-//                        catch (FileNotFoundException e) {
-//                            System.out.println("just test2");
-//                            Log.e("Log", e.toString());
-//                        }
-//                        catch (IOException e) {
-//                            System.out.println("just test3");
-//                            Log.e("Log", e.toString());
-//                        }
-//                    }
-//                    else{
-//                        System.out.println("bitmap is null");
-//                    }
-//                    allowedCapture = false;
-//                }
-            }
-        });
-
-        mSurfaceView = findViewById(R.id.surface_view);
-        mSurfaceView.getHolder().addCallback(new SurfaceHolder.Callback() {
-            @Override
-            public void surfaceCreated(SurfaceHolder holder) {
-
-            }
-
-            @Override
-            public void surfaceChanged(final SurfaceHolder holder, int format, final int width, final int height) {
-                Log.d("=============","surfaceChanged");
-                mHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        if(mEglUtils != null){
-                            mEglUtils.release();
-                        }
-                        mEglUtils = new EGLUtils();
-                        mEglUtils.initEGL(holder.getSurface());
-                        mFramebuffer.initFramebuffer();
-                        mFrame.initFrame();
-                        mFrame.setSize(width,height, CameraOverlap.PREVIEW_HEIGHT,CameraOverlap.PREVIEW_WIDTH );
-                        mPoints.initPoints();
-                        mBitmap.initFrame(CameraOverlap.PREVIEW_HEIGHT,CameraOverlap.PREVIEW_WIDTH);
-                        cameraOverlap.openCamera(mFramebuffer.getSurfaceTexture());
-                    }
-                });
-
-            }
-
-            @Override
-            public void surfaceDestroyed(SurfaceHolder holder) {
-                mHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        if(mSocket.connected()) {
-                            mSocket.disconnect();
-                        }
-                        cameraOverlap.release();
-                        mFramebuffer.release();
-                        mFrame.release();
-                        mPoints.release();
-                        mBitmap.release();
-                        if(mEglUtils != null){
-                            mEglUtils.release();
-                            mEglUtils = null;
-                        }
-                    }
-                });
-
-            }
-        });
-        if(mSurfaceView.getHolder().getSurface()!= null &&mSurfaceView.getWidth() > 0){
-            mHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    if(mEglUtils != null){
-                        mEglUtils.release();
-                    }
-                    mEglUtils = new EGLUtils();
-                    mEglUtils.initEGL(mSurfaceView.getHolder().getSurface());
-                    mFramebuffer.initFramebuffer();
-                    mFrame.initFrame();
-                    mFrame.setSize(mSurfaceView.getWidth(),mSurfaceView.getHeight(), CameraOverlap.PREVIEW_HEIGHT,CameraOverlap.PREVIEW_WIDTH );
-                    mPoints.initPoints();
-                    mBitmap.initFrame(CameraOverlap.PREVIEW_HEIGHT,CameraOverlap.PREVIEW_WIDTH);
-                    cameraOverlap.openCamera(mFramebuffer.getSurfaceTexture());
-                }
-            });
-        }
+        Image image = frame.acquireCameraImage();
+        return image;
     }
-    private float view2openglX(int x,int width){
-        float centerX = width/2.0f;
-        float t = x - centerX;
-        return t/centerX;
-    }
-    private float view2openglY(int y,int height){
-        float centerY = height/2.0f;
-        float s = centerY - y;
-        return s/centerY;
+
+    private static byte[] YUV420toNV21(Image image) {
+        byte[] nv21;
+        // Get the three planes.
+        ByteBuffer yBuffer = image.getPlanes()[0].getBuffer();
+        ByteBuffer uBuffer = image.getPlanes()[1].getBuffer();
+        ByteBuffer vBuffer = image.getPlanes()[2].getBuffer();
+
+        int ySize = yBuffer.remaining();
+        int uSize = uBuffer.remaining();
+        int vSize = vBuffer.remaining();
+
+        nv21 = new byte[ySize + uSize + vSize];
+
+        //U and V are swapped
+        yBuffer.get(nv21, 0, ySize);
+        vBuffer.get(nv21, ySize, uSize);
+        uBuffer.get(nv21, ySize + uSize, vSize);
+
+        return nv21;
     }
 
     public static byte[] rotateYUV420Degree90(byte[] data, int imageWidth, int imageHeight) {
@@ -548,5 +325,27 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         return rotateYUV420Degree180(yuv, imageWidth, imageHeight);
+    }
+
+
+    public static boolean checkIsSupportedDeviceOrFinish(final Activity activity) {
+        if (Build.VERSION.SDK_INT < VERSION_CODES.N) {
+            Log.e(TAG, "Sceneform requires Android N or later");
+            Toast.makeText(activity, "Sceneform requires Android N or later", Toast.LENGTH_LONG).show();
+            activity.finish();
+            return false;
+        }
+        String openGlVersionString =
+                ((ActivityManager) activity.getSystemService(Context.ACTIVITY_SERVICE))
+                        .getDeviceConfigurationInfo()
+                        .getGlEsVersion();
+        if (Double.parseDouble(openGlVersionString) < MIN_OPENGL_VERSION) {
+            Log.e(TAG, "Sceneform requires OpenGL ES 3.0 later");
+            Toast.makeText(activity, "Sceneform requires OpenGL ES 3.0 or later", Toast.LENGTH_LONG)
+                    .show();
+            activity.finish();
+            return false;
+        }
+        return true;
     }
 }

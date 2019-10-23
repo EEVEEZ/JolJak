@@ -5,6 +5,8 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.TextView;
 
+import com.google.ar.sceneform.samples.hellosceneform.R;
+
 public class WebActivity extends AppCompatActivity {
 
     @Override

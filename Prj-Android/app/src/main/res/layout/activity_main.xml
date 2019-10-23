@@ -13,21 +13,17 @@
             android:layout_alignParentBottom="true"
             android:layout_marginBottom="0dp" />
 
+        <fragment
+            android:id="@+id/ux_fragment"
+            android:name="com.hyq.hm.hyperlandmark.FaceArFragment"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
         <Button
             android:id="@+id/Capture"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/capture" />
-
-        <TextView
-            android:id="@+id/CountTextView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerHorizontal="true"
-            android:layout_centerVertical="true"
-            android:text="@string/count"
-            android:textSize="30sp"
-            android:textStyle="bold" />
 
         <Button
             android:id="@+id/Web_button"
@@ -40,6 +36,8 @@
     <FrameLayout
         android:id="@+id/SelectHat"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:layout_height="match_parent">
+
+    </FrameLayout>
 
 </LinearLayout>
