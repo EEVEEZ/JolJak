@@ -1,11 +1,12 @@
 package com.hyq.hm.hyperlandmark;
 
 import android.os.Bundle;
-import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
+
+import androidx.annotation.Nullable;
 
 import com.google.ar.core.Config;
 import com.google.ar.core.Config.AugmentedFaceMode;

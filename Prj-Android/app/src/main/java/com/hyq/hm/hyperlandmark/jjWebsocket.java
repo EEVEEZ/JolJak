@@ -13,6 +13,10 @@ import io.socket.engineio.client.transports.WebSocket;
 
 public class jjWebsocket extends AsyncTask<String, String, Long> {
     private Socket mSocket;
+    public boolean Detected;
+    public boolean Predict;
+    public boolean Fail;
+    public String result;
 
     @Override
     protected Long doInBackground(String... strings) {
@@ -28,13 +32,17 @@ public class jjWebsocket extends AsyncTask<String, String, Long> {
             Log.e("err", e.toString());
             System.out.println("Can't Connect");
         }
+        Detected = false;
+        Predict = false;
         this.connect();
     }
 
     private void connect() {
         mSocket.on(Socket.EVENT_CONNECT, onConnect);
         mSocket.on(Socket.EVENT_CONNECT_ERROR, onConnectError);
-        mSocket.on("greet", onReceivedMessage);
+        mSocket.on("greet", onReceivedgreetMessage);
+        mSocket.on("Detecting result",onDetectingResultMessage);
+        mSocket.on("Predict result",onPredictResultMessage);
         mSocket.on(Socket.EVENT_ERROR, onError);
         mSocket.connect();
     }
@@ -75,12 +83,46 @@ public class jjWebsocket extends AsyncTask<String, String, Long> {
         }
     };
 
-    private Emitter.Listener onReceivedMessage = new Emitter.Listener() {
+    private Emitter.Listener onReceivedgreetMessage = new Emitter.Listener() {
         @Override
         public void call(Object... args) {
-            System.out.println("onReceivedMessage");
+            System.out.println("onGreetMessage");
             String s = args[0].toString();
             System.out.println(s);
+        }
+    };
+
+    private Emitter.Listener onDetectingResultMessage = new Emitter.Listener() {
+        @Override
+        public void call(Object... args) {
+            System.out.println("onDetectingResultMessage");
+            String s = args[0].toString();
+//            System.out.println(s.charAt(2));
+            if(s.charAt(2) == '1'){
+                mSocket.emit("Detected","Success");
+                Detected = true;
+            }
+            else{
+                mSocket.emit("Detected","Fail");
+                Fail = true;
+            }
+        }
+    };
+
+    private Emitter.Listener onPredictResultMessage = new Emitter.Listener() {
+        @Override
+        public void call(Object... args) {
+            System.out.println("onPredictResultMessage");
+            String s = args[0].toString();
+//            System.out.println(s);
+            for(int i=0; i<s.length(); i++){
+                if(s.charAt(i) == 'B'){
+                    result = s.substring(i+15,s.length()-2);
+                    break;
+                }
+            }
+            Predict = true;
+//            System.out.println(result);
         }
     };
 
