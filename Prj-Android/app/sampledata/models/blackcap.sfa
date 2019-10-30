@@ -1,0 +1,75 @@
+{
+  animations: [
+    {
+      path: 'sampledata/models/blackcap.fbx',
+    },
+  ],
+  materials: [
+    {
+      name: 'Material_81',
+      parameters: [
+        {
+          baseColor: [
+            1,
+            1,
+            1,
+            1,
+          ],
+        },
+        {
+          baseColorMap: '491',
+        },
+        {
+          normalMap: null,
+        },
+        {
+          interpolatedColor: null,
+        },
+        {
+          metallic: 0,
+        },
+        {
+          metallicMap: null,
+        },
+        {
+          roughness: 1,
+        },
+        {
+          roughnessMap: null,
+        },
+        {
+          opacity: null,
+        },
+      ],
+      source: 'build/sceneform_sdk/default_materials/fbx_material.sfm',
+    },
+  ],
+  model: {
+    attributes: [
+      'Position',
+      'Color',
+      'TexCoord',
+      'Orientation',
+      'BoneIndices',
+      'BoneWeights',
+    ],
+    collision: {},
+    file: 'sampledata/models/blackcap.fbx',
+    name: 'blackcap',
+    recenter: 'root',
+    scale: 7.9404649999999997,
+  },
+  samplers: [
+    {
+      file: 'sampledata/models\\blackcap.fbm\\491.png',
+      name: '491',
+      pipeline_name: 'blackcap.fbm\\491.png',
+    },
+    {
+      file: 'sampledata/models\\blackcap.fbm\\495.png',
+      name: '495',
+      pipeline_name: 'blackcap.fbm\\495.png',
+    },
+  ],
+  version: '0.54:2',
+}

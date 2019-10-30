@@ -29,7 +29,6 @@ import com.google.ar.core.Pose;
 import com.google.ar.core.TrackingState;
 import com.google.ar.sceneform.ArSceneView;
 import com.google.ar.sceneform.FrameTime;
-import com.google.ar.sceneform.Node;
 import com.google.ar.sceneform.Scene;
 import com.google.ar.sceneform.math.Vector3;
 import com.google.ar.sceneform.rendering.ModelRenderable;
@@ -39,6 +38,7 @@ import com.google.ar.sceneform.ux.AugmentedFaceNode;
 
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -58,6 +58,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean touched;
     private boolean ready;
     private int count;
+    private int result;
 
     private String[] denied;
     private String[] permissions = {Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CAMERA, Manifest.permission.INTERNET};
@@ -109,21 +110,14 @@ public class MainActivity extends AppCompatActivity {
         Webbutton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(getApplicationContext(),WebActivity.class);
+                result = 2;
+                Intent intent = new Intent(getApplicationContext(),ResultActivity.class);
+                intent.putExtra("result",result);
                 startActivity(intent);
             }
         });
 
         mWebsocket = new jjWebsocket();
-
-//        ModelRenderable.builder()
-//                .setSource(this, R.raw.cap)
-//                .build()
-//                .thenAccept(modelRenderable -> {
-//                    faceRegionsRenderable = modelRenderable;
-//                    modelRenderable.setShadowCaster(false);
-//                    modelRenderable.setShadowReceiver(false);
-//                });
 
 
         sceneView = arFragment.getArSceneView();
@@ -133,15 +127,29 @@ public class MainActivity extends AppCompatActivity {
 
         scene.addOnUpdateListener(
                 (FrameTime frameTime) -> {
+
+                    ModelRenderable.builder()
+                            .setSource(this, R.raw.fox_face)
+                            .build()
+                            .thenAccept(modelRenderable -> {
+                                faceRegionsRenderable = modelRenderable;
+                                modelRenderable.setShadowCaster(false);
+                                modelRenderable.setShadowReceiver(false);
+                            });
+
                     if(mWebsocket.Detected){
                         Toast toast = Toast.makeText(getApplicationContext(), "Wait For Result...", Toast.LENGTH_LONG);
                         toast.show();
                         mWebsocket.Detected = false;
                     }
                     else if(mWebsocket.Predict){
-                        Toast toast = Toast.makeText(getApplicationContext(), mWebsocket.result, Toast.LENGTH_LONG);
-                        toast.show();
                         mWebsocket.Predict = false;
+                        if(mWebsocket.result == "long revised"){result = 1;}
+                        else if(mWebsocket.result == "rectangle revised"){result = 2;}
+                        else if(mWebsocket.result == "round revised"){result = 3;}
+                        Intent intent = new Intent(getApplicationContext(),ResultActivity.class);
+                        intent.putExtra("result",result);
+                        startActivity(intent);
                     }
                     else if(mWebsocket.Fail){
                         Toast toast = Toast.makeText(getApplicationContext(), "Please Recapture", Toast.LENGTH_LONG);
@@ -187,25 +195,29 @@ public class MainActivity extends AppCompatActivity {
                     Collection<AugmentedFace> faceList =
                             sceneView.getSession().getAllTrackables(AugmentedFace.class);
 
+
                     // Make new AugmentedFaceNodes for any new faces.
                     for (AugmentedFace face : faceList) {
+                        Pose nosePose = face.getRegionPose(AugmentedFace.RegionType.NOSE_TIP);
+                        Pose foreheadLeft = face.getRegionPose(AugmentedFace.RegionType.FOREHEAD_LEFT);
+                        Pose ForeheadRight = face.getRegionPose(AugmentedFace.RegionType.FOREHEAD_RIGHT);
+                        float[] noseTranslation = nosePose.getTranslation();
+                        float[] ForeheadLeftTranslation = foreheadLeft.getTranslation();
+                        float[] ForeheadRightTranslation = ForeheadRight.getTranslation();
+                        float leftx = Math.abs(Math.abs(noseTranslation[0]) - Math.abs(ForeheadLeftTranslation[0]));
+                        float rightx = Math.abs(Math.abs(ForeheadRightTranslation[0]) - Math.abs(noseTranslation[0]));
+                        System.out.printf("leftx : %f, rightx : %f",leftx,rightx);
+                        float ave = 7f+((leftx + rightx)/2);
+                        float caph = (Math.abs(ForeheadLeftTranslation[1]) + Math.abs(ForeheadRightTranslation[1]))/2 +(Math.abs(noseTranslation[1])/2);
+                        System.out.println(Arrays.toString(noseTranslation));
                         if (!faceNodeMap.containsKey(face)) {
+                            Vector3 localPosition = new Vector3();
+                            localPosition.set(0.0f, caph, -0.015f);
                             AugmentedFaceNode faceNode = new AugmentedFaceNode(face);
                             faceNode.setParent(scene);
-//                            faceNode.setFaceRegionsRenderable(faceRegionsRenderable);
-                            Pose nosePose = face.getRegionPose(AugmentedFace.RegionType.NOSE_TIP);
-                            Pose foreheadLeft = face.getRegionPose(AugmentedFace.RegionType.FOREHEAD_LEFT);
-                            float[] noseTranslation = nosePose.getTranslation();
-                            float[] foreheadLeftTranslation = foreheadLeft.getTranslation();
-                            float ave = 1+(noseTranslation[1] + Math.abs(noseTranslation[2]))/2;
-                            float caph = Math.abs(foreheadLeftTranslation[0]) + Math.abs(foreheadLeftTranslation[1]);
-                            Node lightbulb = new Node();
-                            Vector3 localPosition = new Vector3();
-                            localPosition.set(0.0f,caph, 0.0f);
-                            lightbulb.setLocalPosition(localPosition);
-                            lightbulb.setLocalScale(new Vector3(ave,ave,ave));
-                            lightbulb.setParent(faceNode);
-                            lightbulb.setRenderable(faceRegionsRenderable);
+//                            faceNode.setLocalPosition(localPosition);
+//                            faceNode.setLocalScale(new Vector3(ave-1.3f, ave, ave));
+                            faceNode.setFaceRegionsRenderable(faceRegionsRenderable);
                             faceNodeMap.put(face, faceNode);
                         }
                     }

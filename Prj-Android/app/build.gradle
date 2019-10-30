@@ -55,7 +55,7 @@ sceneform.asset('sampledata/models/fox_face.fbx',
         'sampledata/models/fox_face.sfa',
         'src/main/res/raw/fox_face')
 
-sceneform.asset('sampledata/models/cap.fbx',
+sceneform.asset('sampledata/models/blackcap.fbx',
         'default',
-        'sampledata/models/cap.sfa',
-        'src/main/res/raw/cap')
+        'sampledata/models/blackcap.sfa',
+        'src/main/res/raw/blackcap')

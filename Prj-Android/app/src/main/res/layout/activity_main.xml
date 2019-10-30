@@ -2,9 +2,31 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#000000">
+
+        <Button
+            android:id="@+id/Capture"
+            style="@android:style/Widget.Button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/capture" />
+
+        <Button
+            android:id="@+id/Web_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignEnd="@id/Capture"
+            android:layout_gravity="end"
+            android:text="@string/web" />
+    </FrameLayout>
+
     <com.hyq.hm.hyperlandmark.FixedAspectRatioRelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="602dp">
 
         <SurfaceView
             android:id="@+id/surface_view"
@@ -18,27 +40,11 @@
             android:name="com.hyq.hm.hyperlandmark.FaceArFragment"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
-
-        <Button
-            android:id="@+id/Capture"
-            style="@android:style/Widget.Button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/capture" />
-
-        <Button
-            android:id="@+id/Web_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignEnd="@id/surface_view"
-            android:text="@string/web" />
     </com.hyq.hm.hyperlandmark.FixedAspectRatioRelativeLayout>
 
     <FrameLayout
         android:id="@+id/SelectHat"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
-    </FrameLayout>
+        android:layout_height="match_parent"/>
 
 </LinearLayout>
