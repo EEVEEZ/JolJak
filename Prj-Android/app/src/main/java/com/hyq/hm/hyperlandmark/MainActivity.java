@@ -44,7 +44,6 @@ import com.google.ar.sceneform.ux.AugmentedFaceNode;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -57,6 +56,7 @@ public class MainActivity extends AppCompatActivity {
     private FaceArFragment arFragment;
     private ModelRenderable faceRegionsRenderable;
     private final HashMap<AugmentedFace, AugmentedFaceNode> faceNodeMap = new HashMap<>();
+    private AugmentedFaceNode faceNode = new AugmentedFaceNode();
 
     private ArSceneView sceneView;
 
@@ -69,6 +69,7 @@ public class MainActivity extends AppCompatActivity {
     private int typeReady = 0;
     private int typeFace = 1;
     private int typeCap = 2;
+    private int check = -1;
 
     private ImageButton imageButton1;
     private ImageButton imageButton2;
@@ -76,6 +77,12 @@ public class MainActivity extends AppCompatActivity {
 
     private ViewPager viewPager;
     private TabLayout tabLayout;
+    private ViewpagerAdapter viewpagerAdapter;
+
+    private int Selectraw[] = {
+            R.raw.blackcap,
+            R.raw.whitecap
+    };
 
     private String[] denied;
     private String[] permissions = {Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CAMERA, Manifest.permission.INTERNET};
@@ -125,8 +132,22 @@ public class MainActivity extends AppCompatActivity {
         imageButton1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast toast = Toast.makeText(getApplicationContext(),"Touched 1",Toast.LENGTH_LONG);
-                toast.show();
+                viewPager = (ViewPager) findViewById(R.id.pager);
+                viewpagerAdapter = new ViewpagerAdapter(MainActivity.this, 0);
+                viewPager.setAdapter(viewpagerAdapter);
+                TabLayout tabLayout = (TabLayout) findViewById(R.id.tabDots);
+                tabLayout.setupWithViewPager(viewPager, true);
+            }
+        });
+
+        imageButton2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                viewPager = (ViewPager) findViewById(R.id.pager);
+                viewpagerAdapter = new ViewpagerAdapter(MainActivity.this, 1);
+                viewPager.setAdapter(viewpagerAdapter);
+                TabLayout tabLayout = (TabLayout) findViewById(R.id.tabDots);
+                tabLayout.setupWithViewPager(viewPager, true);
             }
         });
 
@@ -146,6 +167,12 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        viewPager = (ViewPager) findViewById(R.id.pager);
+        viewpagerAdapter = new ViewpagerAdapter(this, 0);
+        viewPager.setAdapter(viewpagerAdapter);
+        TabLayout tabLayout = (TabLayout) findViewById(R.id.tabDots);
+        tabLayout.setupWithViewPager(viewPager, true);
+
         mWebsocket = new jjWebsocket();
 
         sceneView = arFragment.getArSceneView();
@@ -156,7 +183,7 @@ public class MainActivity extends AppCompatActivity {
         scene.addOnUpdateListener(
                 (FrameTime frameTime) -> {
                     ModelRenderable.builder()
-                            .setSource(this, R.raw.blackcap)
+                            .setSource(this, Selectraw[viewPager.getCurrentItem()])
                             .build()
                             .thenAccept(modelRenderable -> {
                                 faceRegionsRenderable = modelRenderable;
@@ -164,6 +191,9 @@ public class MainActivity extends AppCompatActivity {
                                 modelRenderable.setShadowReceiver(false);
                             });
 
+                    System.out.println("check and viewpager");
+                    System.out.println(check);
+                    System.out.println(viewPager.getCurrentItem());
                     if (mWebsocket.Detected) {
                         Toast toast = Toast.makeText(getApplicationContext(), "Wait For Result...", Toast.LENGTH_LONG);
                         toast.show();
@@ -235,17 +265,23 @@ public class MainActivity extends AppCompatActivity {
                         float[] ForeheadRightTranslation = ForeheadRight.getTranslation();
                         float leftx = Math.abs(Math.abs(noseTranslation[0]) - Math.abs(ForeheadLeftTranslation[0]));
                         float rightx = Math.abs(Math.abs(ForeheadRightTranslation[0]) - Math.abs(noseTranslation[0]));
-                        System.out.printf("leftx : %f, rightx : %f", leftx, rightx);
                         float ave = 55f + ((leftx + rightx) / 2);
                         float caph = (Math.abs(ForeheadLeftTranslation[1]) + Math.abs(ForeheadRightTranslation[1])) / 2 + (Math.abs(noseTranslation[1]) / 2);
-                        System.out.println(Arrays.toString(noseTranslation));
                         if (!faceNodeMap.containsKey(face)) {
                             Vector3 localPosition = new Vector3();
                             localPosition.set(0.0f, caph, -0.015f);
-                            AugmentedFaceNode faceNode = new AugmentedFaceNode(face);
-                            faceNode.setParent(scene);
+//                            AugmentedFaceNode faceNode = new AugmentedFaceNode(face);
+                            faceNode.setAugmentedFace(face);
                             faceNode.setLocalScale(new Vector3(ave - 12.3f, ave, ave));
                             faceNode.setFaceRegionsRenderable(faceRegionsRenderable);
+                            faceNode.setParent(scene);
+                            faceNodeMap.put(face, faceNode);
+                        } else {
+                            faceNode.setParent(null);
+                            faceNode.setAugmentedFace(face);
+                            faceNode.setLocalScale(new Vector3(ave - 12.3f, ave, ave));
+                            faceNode.setFaceRegionsRenderable(faceRegionsRenderable);
+                            faceNode.setParent(scene);
                             faceNodeMap.put(face, faceNode);
                         }
                     }
