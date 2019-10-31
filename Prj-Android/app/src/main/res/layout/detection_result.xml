@@ -38,8 +38,7 @@
             android:id="@+id/faceImage"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:srcCompat="@drawable/result_long"
-            android:contentDescription="TODO" />
+            app:srcCompat="@drawable/result_long" />
     </FrameLayout>
 
     <FrameLayout
@@ -64,8 +63,7 @@
             android:id="@+id/recommand_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:text="TextView" />
+            android:layout_gravity="center_horizontal" />
     </FrameLayout>
 
     <FrameLayout

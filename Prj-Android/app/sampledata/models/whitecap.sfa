@@ -1,0 +1,65 @@
+{
+  animations: [
+    {
+      path: 'sampledata/models/whitecap.fbx',
+    },
+  ],
+  materials: [
+    {
+      name: 'Material_89',
+      parameters: [
+        {
+          baseColor: [
+            1,
+            1,
+            1,
+            1,
+          ],
+        },
+        {
+          baseColorMap: '635',
+        },
+        {
+          normalMap: null,
+        },
+        {
+          interpolatedColor: null,
+        },
+        {
+          metallic: 0,
+        },
+        {
+          metallicMap: null,
+        },
+        {
+          roughness: 1,
+        },
+        {
+          roughnessMap: null,
+        },
+        {
+          opacity: null,
+        },
+      ],
+      source: 'build/sceneform_sdk/default_materials/fbx_material.sfm',
+    },
+  ],
+  model: {
+    attributes: [
+      'Position',
+      'Color',
+      'TexCoord',
+      'Orientation',
+      'BoneIndices',
+      'BoneWeights',
+    ],
+    collision: {},
+    file: 'sampledata/models/whitecap.fbx',
+    name: 'whitecap',
+    recenter: 'root',
+    scale: 7.9404649999999997,
+  },
+  samplers: [
+  ],
+  version: '0.54:2',
+}

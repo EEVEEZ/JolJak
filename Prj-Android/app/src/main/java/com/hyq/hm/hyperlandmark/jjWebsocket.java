@@ -51,14 +51,18 @@ public class jjWebsocket extends AsyncTask<String, String, Long> {
         return mSocket.connected();
     }
 
-    public void send(String Data) {
+    public void send(String Data, int type) {
         System.out.println(Data);
-        switch (Data) {
-            case "Ready":
+        switch (type) {
+            case 0 :
                 mSocket.emit("Ready", "Ready to take a data...");
                 break;
-            default:
+            case 1 :
                 mSocket.emit("PreviewData", Data);
+                break;
+            case 2 :
+                mSocket.emit("CapData", Data);
+                break;
         }
     }
 

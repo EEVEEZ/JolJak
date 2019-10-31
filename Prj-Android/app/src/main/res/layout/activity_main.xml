@@ -1,4 +1,5 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
@@ -19,7 +20,6 @@
             android:id="@+id/Web_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignEnd="@id/Capture"
             android:layout_gravity="end"
             android:text="@string/web" />
     </FrameLayout>
@@ -42,9 +42,64 @@
             android:layout_height="match_parent" />
     </com.hyq.hm.hyperlandmark.FixedAspectRatioRelativeLayout>
 
-    <FrameLayout
-        android:id="@+id/SelectHat"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:layout_height="match_parent"
+        android:background="#000000"
+        android:orientation="horizontal">
+
+        <ScrollView
+            android:id="@+id/ScroolView"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:background="#FFFFFF">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <ImageButton
+                    android:id="@+id/ImageButton1"
+                    style="@style/Widget.AppCompat.ImageButton"
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
+                    android:layout_marginTop="16dp"
+                    app:srcCompat="@drawable/no_one" />
+
+                <ImageButton
+                    android:id="@+id/ImageButton2"
+                    style="@style/Widget.AppCompat.ImageButton"
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
+                    android:layout_marginTop="16dp"
+                    app:srcCompat="@drawable/no_one" />
+
+                <ImageButton
+                    android:id="@+id/ImageButton3"
+                    style="@style/Widget.AppCompat.ImageButton"
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
+                    android:layout_marginTop="16dp"
+                    app:srcCompat="@drawable/no_one" />
+            </LinearLayout>
+        </ScrollView>
+
+    </LinearLayout>
+
+    <androidx.viewpager.widget.ViewPager
+        android:id="@+id/pager"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/tabDots"
+        android:layout_alignParentBottom="true"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:tabBackground="@drawable/tab_selector"
+        app:tabGravity="center"
+        app:tabIndicatorHeight="0dp">
+    </com.google.android.material.tabs.TabLayout>
 
 </LinearLayout>

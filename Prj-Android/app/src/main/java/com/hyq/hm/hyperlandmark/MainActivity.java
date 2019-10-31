@@ -7,23 +7,28 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.provider.MediaStore;
 import android.util.Base64;
 import android.util.Log;
 import android.view.PixelCopy;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.PermissionChecker;
+import androidx.viewpager.widget.ViewPager;
 
+import com.google.android.material.tabs.TabLayout;
 import com.google.ar.core.AugmentedFace;
 import com.google.ar.core.Pose;
 import com.google.ar.core.TrackingState;
@@ -37,6 +42,7 @@ import com.google.ar.sceneform.samples.hellosceneform.R;
 import com.google.ar.sceneform.ux.AugmentedFaceNode;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -59,6 +65,17 @@ public class MainActivity extends AppCompatActivity {
     private boolean ready;
     private int count;
     private int result;
+    private int PICK_IMAGE_REQUEST = 1;
+    private int typeReady = 0;
+    private int typeFace = 1;
+    private int typeCap = 2;
+
+    private ImageButton imageButton1;
+    private ImageButton imageButton2;
+    private ImageButton imageButton3;
+
+    private ViewPager viewPager;
+    private TabLayout tabLayout;
 
     private String[] denied;
     private String[] permissions = {Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CAMERA, Manifest.permission.INTERNET};
@@ -99,8 +116,20 @@ public class MainActivity extends AppCompatActivity {
                 ActivityCompat.requestPermissions(this, denied, 5);
             }
         }
-
         setContentView(R.layout.activity_main);
+
+        imageButton1 = (ImageButton) findViewById(R.id.ImageButton1);
+        imageButton2 = (ImageButton) findViewById(R.id.ImageButton2);
+        imageButton3 = (ImageButton) findViewById(R.id.ImageButton3);
+
+        imageButton1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast toast = Toast.makeText(getApplicationContext(),"Touched 1",Toast.LENGTH_LONG);
+                toast.show();
+            }
+        });
+
         arFragment = (FaceArFragment) getSupportFragmentManager().findFragmentById(R.id.ux_fragment);
 
         button = findViewById(R.id.Capture);
@@ -110,15 +139,14 @@ public class MainActivity extends AppCompatActivity {
         Webbutton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                result = 2;
-                Intent intent = new Intent(getApplicationContext(),ResultActivity.class);
-                intent.putExtra("result",result);
-                startActivity(intent);
+                Intent intent = new Intent();
+                intent.setType("image/*");
+                intent.setAction(Intent.ACTION_PICK);
+                startActivityForResult(Intent.createChooser(intent, "Select Picture"), PICK_IMAGE_REQUEST);
             }
         });
 
         mWebsocket = new jjWebsocket();
-
 
         sceneView = arFragment.getArSceneView();
         sceneView.setCameraStreamRenderPriority(Renderable.RENDER_PRIORITY_FIRST);
@@ -127,9 +155,8 @@ public class MainActivity extends AppCompatActivity {
 
         scene.addOnUpdateListener(
                 (FrameTime frameTime) -> {
-
                     ModelRenderable.builder()
-                            .setSource(this, R.raw.fox_face)
+                            .setSource(this, R.raw.blackcap)
                             .build()
                             .thenAccept(modelRenderable -> {
                                 faceRegionsRenderable = modelRenderable;
@@ -137,27 +164,29 @@ public class MainActivity extends AppCompatActivity {
                                 modelRenderable.setShadowReceiver(false);
                             });
 
-                    if(mWebsocket.Detected){
+                    if (mWebsocket.Detected) {
                         Toast toast = Toast.makeText(getApplicationContext(), "Wait For Result...", Toast.LENGTH_LONG);
                         toast.show();
                         mWebsocket.Detected = false;
-                    }
-                    else if(mWebsocket.Predict){
+                    } else if (mWebsocket.Predict) {
                         mWebsocket.Predict = false;
-                        if(mWebsocket.result == "long revised"){result = 1;}
-                        else if(mWebsocket.result == "rectangle revised"){result = 2;}
-                        else if(mWebsocket.result == "round revised"){result = 3;}
-                        Intent intent = new Intent(getApplicationContext(),ResultActivity.class);
-                        intent.putExtra("result",result);
+                        if (mWebsocket.result == "long revised") {
+                            result = 1;
+                        } else if (mWebsocket.result == "rectangle revised") {
+                            result = 2;
+                        } else if (mWebsocket.result == "round revised") {
+                            result = 3;
+                        }
+                        Intent intent = new Intent(getApplicationContext(), ResultActivity.class);
+                        intent.putExtra("result", result);
                         startActivity(intent);
-                    }
-                    else if(mWebsocket.Fail){
+                    } else if (mWebsocket.Fail) {
                         Toast toast = Toast.makeText(getApplicationContext(), "Please Recapture", Toast.LENGTH_LONG);
                         toast.show();
                         mWebsocket.Fail = false;
                     }
-                    if(ready){
-                        mWebsocket.send("Ready");
+                    if (ready) {
+                        mWebsocket.send("Ready", typeReady);
                         ready = false;
                     }
                     if (touched && count < 1) {
@@ -168,7 +197,7 @@ public class MainActivity extends AppCompatActivity {
                         PixelCopy.request(sceneView, bitmap, (copyResult) -> {
                             if (copyResult == PixelCopy.SUCCESS) {
                                 ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-                                bitmap.compress(Bitmap.CompressFormat.JPEG,100,outputStream);
+                                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream);
                                 byte[] compressedData = outputStream.toByteArray();
                                 String sendString = null;
                                 try {
@@ -181,7 +210,7 @@ public class MainActivity extends AppCompatActivity {
                                     Log.e("EWN", "Out of memory error catched");
                                 }
                                 if (mWebsocket.connected()) {
-                                    mWebsocket.send(sendString);
+                                    mWebsocket.send(sendString, typeFace);
                                 }
                                 touched = false;
                             }
@@ -206,17 +235,16 @@ public class MainActivity extends AppCompatActivity {
                         float[] ForeheadRightTranslation = ForeheadRight.getTranslation();
                         float leftx = Math.abs(Math.abs(noseTranslation[0]) - Math.abs(ForeheadLeftTranslation[0]));
                         float rightx = Math.abs(Math.abs(ForeheadRightTranslation[0]) - Math.abs(noseTranslation[0]));
-                        System.out.printf("leftx : %f, rightx : %f",leftx,rightx);
-                        float ave = 7f+((leftx + rightx)/2);
-                        float caph = (Math.abs(ForeheadLeftTranslation[1]) + Math.abs(ForeheadRightTranslation[1]))/2 +(Math.abs(noseTranslation[1])/2);
+                        System.out.printf("leftx : %f, rightx : %f", leftx, rightx);
+                        float ave = 55f + ((leftx + rightx) / 2);
+                        float caph = (Math.abs(ForeheadLeftTranslation[1]) + Math.abs(ForeheadRightTranslation[1])) / 2 + (Math.abs(noseTranslation[1]) / 2);
                         System.out.println(Arrays.toString(noseTranslation));
                         if (!faceNodeMap.containsKey(face)) {
                             Vector3 localPosition = new Vector3();
                             localPosition.set(0.0f, caph, -0.015f);
                             AugmentedFaceNode faceNode = new AugmentedFaceNode(face);
                             faceNode.setParent(scene);
-//                            faceNode.setLocalPosition(localPosition);
-//                            faceNode.setLocalScale(new Vector3(ave-1.3f, ave, ave));
+                            faceNode.setLocalScale(new Vector3(ave - 12.3f, ave, ave));
                             faceNode.setFaceRegionsRenderable(faceRegionsRenderable);
                             faceNodeMap.put(face, faceNode);
                         }
@@ -238,15 +266,46 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onResume(){
+    protected void onResume() {
         super.onResume();
         mWebsocket.init();
     }
 
     @Override
-    protected void onStop(){
+    protected void onStop() {
         super.onStop();
         mWebsocket.disconnect();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
+            Uri uri = data.getData();
+            try {
+                Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), uri);
+                ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+                if (mWebsocket.connected()) {
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream);
+                    byte[] compressedData = outputStream.toByteArray();
+                    String sendString = null;
+                    try {
+                        System.gc();
+                        sendString = Base64.encodeToString(compressedData, Base64.DEFAULT);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    } catch (OutOfMemoryError e) {
+                        sendString = Base64.encodeToString(compressedData, Base64.DEFAULT);
+                        Log.e("EWN", "Out of memory error catched");
+                    }
+                    mWebsocket.send(sendString, typeCap);
+                }
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     @Override

@@ -18,7 +18,6 @@ import java.util.Set;
 
 public class FaceArFragment extends ArFragment {
 
-
     @Override
     public View onCreateView(
             LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -43,6 +42,7 @@ public class FaceArFragment extends ArFragment {
         // Configure 3D Face Mesh
         config.setAugmentedFaceMode(AugmentedFaceMode.MESH3D);
         config.setUpdateMode(Config.UpdateMode.BLOCKING);
+        config.setFocusMode(Config.FocusMode.AUTO);
         return config;
     }
 }

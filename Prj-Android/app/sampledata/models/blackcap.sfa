@@ -56,8 +56,9 @@
     collision: {},
     file: 'sampledata/models/blackcap.fbx',
     name: 'blackcap',
-    recenter: 'root',
-    scale: 7.9404649999999997,
+    recenter: {x:0.5, y:-0.25, z:0.55},
+    scale: 1,
+    smoothing_angle: 40,
   },
   samplers: [
     {
