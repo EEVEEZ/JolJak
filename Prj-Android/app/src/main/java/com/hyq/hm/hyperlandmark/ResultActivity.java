@@ -50,6 +50,9 @@ public class ResultActivity extends AppCompatActivity {
         recommandTitle.setText("추천하는 모자");
         recommandTitle.setTextSize(35.0f);
 
+        System.out.println("result = ");
+        System.out.println(result);
+
         switch (result){
             case 1:{
                 faceText.setText("긴 얼굴형 입니다!");

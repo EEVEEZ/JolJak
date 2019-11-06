@@ -27,7 +27,7 @@ public class jjWebsocket extends AsyncTask<String, String, Long> {
         try {
             IO.Options options = new IO.Options();
             options.transports = new String[]{WebSocket.NAME};
-            mSocket = IO.socket("http://54.180.122.119:5000", options);
+            mSocket = IO.socket("http://15.164.96.191:5000", options);
         } catch (URISyntaxException e) {
             Log.e("err", e.toString());
             System.out.println("Can't Connect");
@@ -61,7 +61,7 @@ public class jjWebsocket extends AsyncTask<String, String, Long> {
                 mSocket.emit("PreviewData", Data);
                 break;
             case 2 :
-                mSocket.emit("CapData", Data);
+                mSocket.emit("AlbumData", Data);
                 break;
         }
     }
@@ -118,15 +118,15 @@ public class jjWebsocket extends AsyncTask<String, String, Long> {
         public void call(Object... args) {
             System.out.println("onPredictResultMessage");
             String s = args[0].toString();
-//            System.out.println(s);
+            System.out.println(s);
             for(int i=0; i<s.length(); i++){
                 if(s.charAt(i) == 'B'){
-                    result = s.substring(i+15,s.length()-2);
+                    result = s.substring(i+16,s.length()-2);
                     break;
                 }
             }
             Predict = true;
-//            System.out.println(result);
+            System.out.println(result);
         }
     };
 

@@ -17,11 +17,11 @@
             android:text="@string/capture" />
 
         <Button
-            android:id="@+id/Web_button"
+            android:id="@+id/Album_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="end"
-            android:text="@string/web" />
+            android:text="@string/album" />
     </FrameLayout>
 
     <com.hyq.hm.hyperlandmark.FixedAspectRatioRelativeLayout
@@ -65,7 +65,7 @@
                     android:layout_width="80dp"
                     android:layout_height="80dp"
                     android:layout_marginTop="16dp"
-                    app:srcCompat="@drawable/no_one" />
+                    app:srcCompat="@drawable/menu_cap" />
 
                 <ImageButton
                     android:id="@+id/ImageButton2"
@@ -73,7 +73,7 @@
                     android:layout_width="80dp"
                     android:layout_height="80dp"
                     android:layout_marginTop="16dp"
-                    app:srcCompat="@drawable/no_one" />
+                    app:srcCompat="@drawable/menu_pe" />
 
                 <ImageButton
                     android:id="@+id/ImageButton3"
@@ -81,7 +81,7 @@
                     android:layout_width="80dp"
                     android:layout_height="80dp"
                     android:layout_marginTop="16dp"
-                    app:srcCompat="@drawable/no_one" />
+                    app:srcCompat="@drawable/menu_beret" />
             </LinearLayout>
         </ScrollView>
 
@@ -91,6 +91,16 @@
             android:layout_marginLeft="16dp"
             android:orientation="vertical">
 
+            <com.google.android.material.tabs.TabLayout
+                android:id="@+id/tabDots"
+                android:layout_width="match_parent"
+                android:layout_height="12dp"
+                android:layout_gravity="top|center_vertical"
+                android:background="#FFFFFF"
+                app:tabBackground="@drawable/tab_selector"
+                app:tabGravity="center"
+                app:tabIndicatorHeight="1dp"></com.google.android.material.tabs.TabLayout>
+
             <androidx.viewpager.widget.ViewPager
                 android:id="@+id/pager"
                 android:layout_width="wrap_content"
@@ -98,16 +108,6 @@
                 android:background="#FFFFFF">
 
             </androidx.viewpager.widget.ViewPager>
-
-            <com.google.android.material.tabs.TabLayout
-                android:id="@+id/tabDots"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_gravity="bottom|center_vertical"
-                android:layout_marginLeft="16dp"
-                app:tabBackground="@drawable/tab_selector"
-                app:tabGravity="center"
-                app:tabIndicatorHeight="1dp"></com.google.android.material.tabs.TabLayout>
 
         </LinearLayout>
 

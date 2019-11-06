@@ -76,7 +76,6 @@ public class MainActivity extends AppCompatActivity {
     private ImageButton imageButton3;
 
     private ViewPager viewPager;
-    private TabLayout tabLayout;
     private ViewpagerAdapter viewpagerAdapter;
 
     private int Selectraw[] = {
@@ -125,6 +124,7 @@ public class MainActivity extends AppCompatActivity {
         }
         setContentView(R.layout.activity_main);
 
+
         imageButton1 = (ImageButton) findViewById(R.id.ImageButton1);
         imageButton2 = (ImageButton) findViewById(R.id.ImageButton2);
         imageButton3 = (ImageButton) findViewById(R.id.ImageButton3);
@@ -156,8 +156,8 @@ public class MainActivity extends AppCompatActivity {
         button = findViewById(R.id.Capture);
         button.setOnClickListener(Capturelistener);
 
-        Button Webbutton = findViewById(R.id.Web_button);
-        Webbutton.setOnClickListener(new View.OnClickListener() {
+        Button albumButton = findViewById(R.id.Album_button);
+        albumButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent();
@@ -175,6 +175,8 @@ public class MainActivity extends AppCompatActivity {
 
         mWebsocket = new jjWebsocket();
 
+        mWebsocket.init();
+
         sceneView = arFragment.getArSceneView();
         sceneView.setCameraStreamRenderPriority(Renderable.RENDER_PRIORITY_FIRST);
 
@@ -182,29 +184,40 @@ public class MainActivity extends AppCompatActivity {
 
         scene.addOnUpdateListener(
                 (FrameTime frameTime) -> {
-                    ModelRenderable.builder()
-                            .setSource(this, Selectraw[viewPager.getCurrentItem()])
-                            .build()
-                            .thenAccept(modelRenderable -> {
-                                faceRegionsRenderable = modelRenderable;
-                                modelRenderable.setShadowCaster(false);
-                                modelRenderable.setShadowReceiver(false);
-                            });
+//                    ModelRenderable.builder()
+//                            .setSource(this, Selectraw[viewPager.getCurrentItem()])
+//                            .build()
+//                            .thenAccept(modelRenderable -> {
+//                                faceRegionsRenderable = modelRenderable;
+//                                modelRenderable.setShadowCaster(false);
+//                                modelRenderable.setShadowReceiver(false);
+//                            });
 
-                    System.out.println("check and viewpager");
-                    System.out.println(check);
-                    System.out.println(viewPager.getCurrentItem());
+//                    ModelRenderable.builder()
+//                            .setSource(this, R.raw.beret)
+//                            .build()
+//                            .thenAccept(modelRenderable -> {
+//                                faceRegionsRenderable = modelRenderable;
+//                                modelRenderable.setShadowCaster(false);
+//                                modelRenderable.setShadowReceiver(false);
+//                            });
+
+//                    System.out.println("check and viewpager");
+//                    System.out.println(check);
+//                    System.out.println(viewPager.getCurrentItem());
                     if (mWebsocket.Detected) {
                         Toast toast = Toast.makeText(getApplicationContext(), "Wait For Result...", Toast.LENGTH_LONG);
                         toast.show();
                         mWebsocket.Detected = false;
                     } else if (mWebsocket.Predict) {
+//                        System.out.println("mWebsocket.result = ");
+//                        System.out.println(mWebsocket.result);
                         mWebsocket.Predict = false;
-                        if (mWebsocket.result == "long revised") {
+                        if (mWebsocket.result.equals("long")) {
                             result = 1;
-                        } else if (mWebsocket.result == "rectangle revised") {
+                        } else if (mWebsocket.result.equals("rectangle")) {
                             result = 2;
-                        } else if (mWebsocket.result == "round revised") {
+                        } else if (mWebsocket.result.equals("round")) {
                             result = 3;
                         }
                         Intent intent = new Intent(getApplicationContext(), ResultActivity.class);
@@ -301,17 +314,17 @@ public class MainActivity extends AppCompatActivity {
                 });
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        mWebsocket.init();
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        mWebsocket.disconnect();
-    }
+//    @Override
+////    protected void onResume() {
+////        super.onResume();
+////        mWebsocket.init();
+////    }
+////
+////    @Override
+////    protected void onStop() {
+////        super.onStop();
+////        mWebsocket.disconnect();
+////    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -323,6 +336,7 @@ public class MainActivity extends AppCompatActivity {
                 Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), uri);
                 ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
                 if (mWebsocket.connected()) {
+                    mWebsocket.send("Ready", typeReady);
                     bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream);
                     byte[] compressedData = outputStream.toByteArray();
                     String sendString = null;

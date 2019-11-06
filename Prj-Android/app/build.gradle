@@ -60,3 +60,10 @@ sceneform.asset('sampledata/models/blackcap.fbx',
         'default',
         'sampledata/models/blackcap.sfa',
         'src/main/res/raw/blackcap')
+
+sceneform.asset('sampledata/models/beret.fbx',
+        'default',
+        'sampledata/models/beret.sfa',
+        'src/main/res/raw/beret')
+
+
