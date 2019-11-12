@@ -14,7 +14,8 @@ import io.socket.engineio.client.transports.WebSocket;
 public class jjWebsocket extends AsyncTask<String, String, Long> {
     private Socket mSocket;
     public boolean Detected;
-    public boolean Predict;
+    public boolean Face_Predict;
+    public boolean Cap_Predict;
     public boolean Fail;
     public String result;
 
@@ -33,7 +34,8 @@ public class jjWebsocket extends AsyncTask<String, String, Long> {
             System.out.println("Can't Connect");
         }
         Detected = false;
-        Predict = false;
+        Face_Predict = false;
+        Cap_Predict = false;
         this.connect();
     }
 
@@ -42,7 +44,8 @@ public class jjWebsocket extends AsyncTask<String, String, Long> {
         mSocket.on(Socket.EVENT_CONNECT_ERROR, onConnectError);
         mSocket.on("greet", onReceivedgreetMessage);
         mSocket.on("Detecting result",onDetectingResultMessage);
-        mSocket.on("Predict result",onPredictResultMessage);
+        mSocket.on("Face Predict result",onFacePredictResultMessage);
+        mSocket.on("Cap Predict result",onCapPredictResultMessage);
         mSocket.on(Socket.EVENT_ERROR, onError);
         mSocket.connect();
     }
@@ -113,7 +116,7 @@ public class jjWebsocket extends AsyncTask<String, String, Long> {
         }
     };
 
-    private Emitter.Listener onPredictResultMessage = new Emitter.Listener() {
+    private Emitter.Listener onFacePredictResultMessage = new Emitter.Listener() {
         @Override
         public void call(Object... args) {
             System.out.println("onPredictResultMessage");
@@ -125,7 +128,24 @@ public class jjWebsocket extends AsyncTask<String, String, Long> {
                     break;
                 }
             }
-            Predict = true;
+            Face_Predict = true;
+            System.out.println(result);
+        }
+    };
+
+    private Emitter.Listener onCapPredictResultMessage = new Emitter.Listener() {
+        @Override
+        public void call(Object... args) {
+            System.out.println("onCapPredictResultMessage");
+            String s = args[0].toString();
+            System.out.println(s);
+            for(int i=0;i<s.length();i++){
+                if(s.charAt(i) == 'B'){
+                    result = s.substring(i+16,s.length()-2);
+                    break;
+                }
+            }
+            Cap_Predict = true;
             System.out.println(result);
         }
     };

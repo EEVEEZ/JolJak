@@ -1,0 +1,76 @@
+{
+  animations: [
+    {
+      path: 'sampledata/models/jungpurple.fbx',
+    },
+  ],
+  materials: [
+    {
+      name: 'Material_71',
+      parameters: [
+        {
+          baseColor: [
+            1,
+            1,
+            1,
+            1,
+          ],
+        },
+        {
+          baseColorMap: '217',
+        },
+        {
+          normalMap: null,
+        },
+        {
+          interpolatedColor: null,
+        },
+        {
+          metallic: 0,
+        },
+        {
+          metallicMap: null,
+        },
+        {
+          roughness: 1,
+        },
+        {
+          roughnessMap: null,
+        },
+        {
+          opacity: null,
+        },
+      ],
+      source: 'build/sceneform_sdk/default_materials/fbx_material.sfm',
+    },
+  ],
+  model: {
+    attributes: [
+      'Position',
+      'Color',
+      'TexCoord',
+      'Orientation',
+      'BoneIndices',
+      'BoneWeights',
+    ],
+    collision: {},
+    file: 'sampledata/models/jungpurple.fbx',
+    name: 'jungpurple',
+    recenter: {x:0.5, y:-0.30, z:0.7},
+    scale: 1.45,
+    smoothing_angle: 40,
+  },
+  samplers: [
+    {
+      file: 'sampledata/models\\jungpurple.fbm\\217.png',
+      name: '217',
+      pipeline_name: 'jungpurple.fbm\\217.png',
+    },
+    {
+      file: 'sampledata/models\\jungpurple.fbm\\221.png',
+      name: '221',
+      pipeline_name: 'jungpurple.fbm\\221.png',
+    },
+  ],
+  version: '0.54:2',
+}

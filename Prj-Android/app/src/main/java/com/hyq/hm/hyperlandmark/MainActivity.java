@@ -69,8 +69,8 @@ public class MainActivity extends AppCompatActivity {
     private int typeReady = 0;
     private int typeFace = 1;
     private int typeCap = 2;
-    private int check = -1;
 
+    private ImageButton imageButton0;
     private ImageButton imageButton1;
     private ImageButton imageButton2;
     private ImageButton imageButton3;
@@ -78,9 +78,11 @@ public class MainActivity extends AppCompatActivity {
     private ViewPager viewPager;
     private ViewpagerAdapter viewpagerAdapter;
 
-    private int Selectraw[] = {
-            R.raw.blackcap,
-            R.raw.whitecap
+    private int Selectraw[][] = {
+            {R.raw.nocap},
+            {R.raw.blackcap, R.raw.whitecap, R.raw.bluecap, R.raw.pinkcap},
+            {R.raw.jungblue, R.raw.jungbrown, R.raw.jungco, R.raw.jungpurple},
+            {R.raw.beregray, R.raw.beremopi, R.raw.beremowh},
     };
 
     private String[] denied;
@@ -91,11 +93,17 @@ public class MainActivity extends AppCompatActivity {
     View.OnClickListener Capturelistener = new View.OnClickListener() {
         @Override
         public void onClick(View view) {
-            Toast toast = Toast.makeText(getApplicationContext(), "Caputured", Toast.LENGTH_LONG);
-            toast.show();
-            touched = true;
-            ready = true;
-            count = 0;
+            if(viewpagerAdapter.getIndex() != 0){
+                Toast toast = Toast.makeText(getApplicationContext(), "Please take off the hat", Toast.LENGTH_LONG);
+                toast.show();
+            }
+            else {
+                Toast toast = Toast.makeText(getApplicationContext(), "Caputured", Toast.LENGTH_LONG);
+                toast.show();
+                touched = true;
+                ready = true;
+                count = 0;
+            }
         }
     };
 
@@ -125,11 +133,12 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
 
+        imageButton0 = (ImageButton) findViewById(R.id.ImageButton0);
         imageButton1 = (ImageButton) findViewById(R.id.ImageButton1);
         imageButton2 = (ImageButton) findViewById(R.id.ImageButton2);
         imageButton3 = (ImageButton) findViewById(R.id.ImageButton3);
 
-        imageButton1.setOnClickListener(new View.OnClickListener() {
+        imageButton0.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 viewPager = (ViewPager) findViewById(R.id.pager);
@@ -140,11 +149,33 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        imageButton2.setOnClickListener(new View.OnClickListener() {
+        imageButton1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 viewPager = (ViewPager) findViewById(R.id.pager);
                 viewpagerAdapter = new ViewpagerAdapter(MainActivity.this, 1);
+                viewPager.setAdapter(viewpagerAdapter);
+                TabLayout tabLayout = (TabLayout) findViewById(R.id.tabDots);
+                tabLayout.setupWithViewPager(viewPager, true);
+            }
+        });
+
+        imageButton2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                viewPager = (ViewPager) findViewById(R.id.pager);
+                viewpagerAdapter = new ViewpagerAdapter(MainActivity.this, 2);
+                viewPager.setAdapter(viewpagerAdapter);
+                TabLayout tabLayout = (TabLayout) findViewById(R.id.tabDots);
+                tabLayout.setupWithViewPager(viewPager, true);
+            }
+        });
+
+        imageButton3.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                viewPager = (ViewPager) findViewById(R.id.pager);
+                viewpagerAdapter = new ViewpagerAdapter(MainActivity.this, 3);
                 viewPager.setAdapter(viewpagerAdapter);
                 TabLayout tabLayout = (TabLayout) findViewById(R.id.tabDots);
                 tabLayout.setupWithViewPager(viewPager, true);
@@ -184,35 +215,25 @@ public class MainActivity extends AppCompatActivity {
 
         scene.addOnUpdateListener(
                 (FrameTime frameTime) -> {
-//                    ModelRenderable.builder()
-//                            .setSource(this, Selectraw[viewPager.getCurrentItem()])
-//                            .build()
-//                            .thenAccept(modelRenderable -> {
-//                                faceRegionsRenderable = modelRenderable;
-//                                modelRenderable.setShadowCaster(false);
-//                                modelRenderable.setShadowReceiver(false);
-//                            });
+                    System.out.println(viewpagerAdapter.getIndex());
+                    ModelRenderable.builder()
+                            .setSource(this, Selectraw[viewpagerAdapter.getIndex()][viewPager.getCurrentItem()])
+                            .build()
+                            .thenAccept(modelRenderable -> {
+                                faceRegionsRenderable = modelRenderable;
+                                modelRenderable.setShadowCaster(false);
+                                modelRenderable.setShadowReceiver(false);
+                            });
 
-//                    ModelRenderable.builder()
-//                            .setSource(this, R.raw.beret)
-//                            .build()
-//                            .thenAccept(modelRenderable -> {
-//                                faceRegionsRenderable = modelRenderable;
-//                                modelRenderable.setShadowCaster(false);
-//                                modelRenderable.setShadowReceiver(false);
-//                            });
-
-//                    System.out.println("check and viewpager");
-//                    System.out.println(check);
 //                    System.out.println(viewPager.getCurrentItem());
                     if (mWebsocket.Detected) {
                         Toast toast = Toast.makeText(getApplicationContext(), "Wait For Result...", Toast.LENGTH_LONG);
                         toast.show();
                         mWebsocket.Detected = false;
-                    } else if (mWebsocket.Predict) {
+                    } else if (mWebsocket.Face_Predict) {
 //                        System.out.println("mWebsocket.result = ");
 //                        System.out.println(mWebsocket.result);
-                        mWebsocket.Predict = false;
+                        mWebsocket.Face_Predict = false;
                         if (mWebsocket.result.equals("long")) {
                             result = 1;
                         } else if (mWebsocket.result.equals("rectangle")) {
@@ -223,6 +244,21 @@ public class MainActivity extends AppCompatActivity {
                         Intent intent = new Intent(getApplicationContext(), ResultActivity.class);
                         intent.putExtra("result", result);
                         startActivity(intent);
+                    } else if (mWebsocket.Cap_Predict) {
+                        mWebsocket.Cap_Predict = false;
+                        if (mWebsocket.result.equals("bini")) {
+                            Toast toast = Toast.makeText(getApplicationContext(), "That is Bini", Toast.LENGTH_LONG);
+                            toast.show();
+                        } else if (mWebsocket.result.equals("fedora")) {
+                            Toast toast = Toast.makeText(getApplicationContext(), "That is Fedora", Toast.LENGTH_LONG);
+                            toast.show();
+                        } else if (mWebsocket.result.equals("ballcap")) {
+                            Toast toast = Toast.makeText(getApplicationContext(), "That is BallCap", Toast.LENGTH_LONG);
+                            toast.show();
+                        } else if (mWebsocket.result.equals("hunting")) {
+                            Toast toast = Toast.makeText(getApplicationContext(), "That is HuntingCap", Toast.LENGTH_LONG);
+                            toast.show();
+                        }
                     } else if (mWebsocket.Fail) {
                         Toast toast = Toast.makeText(getApplicationContext(), "Please Recapture", Toast.LENGTH_LONG);
                         toast.show();
@@ -280,23 +316,14 @@ public class MainActivity extends AppCompatActivity {
                         float rightx = Math.abs(Math.abs(ForeheadRightTranslation[0]) - Math.abs(noseTranslation[0]));
                         float ave = 55f + ((leftx + rightx) / 2);
                         float caph = (Math.abs(ForeheadLeftTranslation[1]) + Math.abs(ForeheadRightTranslation[1])) / 2 + (Math.abs(noseTranslation[1]) / 2);
-                        if (!faceNodeMap.containsKey(face)) {
-                            Vector3 localPosition = new Vector3();
-                            localPosition.set(0.0f, caph, -0.015f);
-//                            AugmentedFaceNode faceNode = new AugmentedFaceNode(face);
-                            faceNode.setAugmentedFace(face);
-                            faceNode.setLocalScale(new Vector3(ave - 12.3f, ave, ave));
-                            faceNode.setFaceRegionsRenderable(faceRegionsRenderable);
-                            faceNode.setParent(scene);
-                            faceNodeMap.put(face, faceNode);
-                        } else {
-                            faceNode.setParent(null);
-                            faceNode.setAugmentedFace(face);
-                            faceNode.setLocalScale(new Vector3(ave - 12.3f, ave, ave));
-                            faceNode.setFaceRegionsRenderable(faceRegionsRenderable);
-                            faceNode.setParent(scene);
-                            faceNodeMap.put(face, faceNode);
-                        }
+                        Vector3 localPosition = new Vector3();
+                        localPosition.set(0.0f, caph, -0.015f);
+                        faceNode.setParent(null);
+                        faceNode.setAugmentedFace(face);
+                        faceNode.setLocalScale(new Vector3(ave - 12.3f, ave, ave));
+                        faceNode.setFaceRegionsRenderable(faceRegionsRenderable);
+                        faceNode.setParent(scene);
+                        faceNodeMap.put(face, faceNode);
                     }
 
                     // Remove any AugmentedFaceNodes associated with an AugmentedFace that stopped tracking.
@@ -313,18 +340,6 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
     }
-
-//    @Override
-////    protected void onResume() {
-////        super.onResume();
-////        mWebsocket.init();
-////    }
-////
-////    @Override
-////    protected void onStop() {
-////        super.onStop();
-////        mWebsocket.disconnect();
-////    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {

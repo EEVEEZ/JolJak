@@ -1,0 +1,76 @@
+{
+  animations: [
+    {
+      path: 'sampledata/models/beregray.fbx',
+    },
+  ],
+  materials: [
+    {
+      name: 'Material_71',
+      parameters: [
+        {
+          baseColor: [
+            1,
+            1,
+            1,
+            1,
+          ],
+        },
+        {
+          baseColorMap: '215',
+        },
+        {
+          normalMap: null,
+        },
+        {
+          interpolatedColor: null,
+        },
+        {
+          metallic: 0,
+        },
+        {
+          metallicMap: null,
+        },
+        {
+          roughness: 1,
+        },
+        {
+          roughnessMap: null,
+        },
+        {
+          opacity: null,
+        },
+      ],
+      source: 'build/sceneform_sdk/default_materials/fbx_material.sfm',
+    },
+  ],
+  model: {
+    attributes: [
+      'Position',
+      'Color',
+      'TexCoord',
+      'Orientation',
+      'BoneIndices',
+      'BoneWeights',
+    ],
+    collision: {},
+    file: 'sampledata/models/beregray.fbx',
+    name: 'beregray',
+    recenter: {x:0.5, y:-0.35, z:0.68},
+    scale: 1.05,
+    smoothing_angle: 40,
+  },
+  samplers: [
+    {
+      file: 'sampledata/models\\beregray.fbm\\215.png',
+      name: '215',
+      pipeline_name: 'beregray.fbm\\215.png',
+    },
+    {
+      file: 'sampledata/models\\beregray.fbm\\219.png',
+      name: '219',
+      pipeline_name: 'beregray.fbm\\219.png',
+    },
+  ],
+  version: '0.54:2',
+}

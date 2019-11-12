@@ -1,0 +1,76 @@
+{
+  animations: [
+    {
+      path: 'sampledata/models/bluecap.fbx',
+    },
+  ],
+  materials: [
+    {
+      name: 'Material_73',
+      parameters: [
+        {
+          baseColor: [
+            1,
+            1,
+            1,
+            1,
+          ],
+        },
+        {
+          baseColorMap: '304',
+        },
+        {
+          normalMap: null,
+        },
+        {
+          interpolatedColor: null,
+        },
+        {
+          metallic: 0,
+        },
+        {
+          metallicMap: null,
+        },
+        {
+          roughness: 1,
+        },
+        {
+          roughnessMap: null,
+        },
+        {
+          opacity: null,
+        },
+      ],
+      source: 'build/sceneform_sdk/default_materials/fbx_material.sfm',
+    },
+  ],
+  model: {
+    attributes: [
+      'Position',
+      'Color',
+      'TexCoord',
+      'Orientation',
+      'BoneIndices',
+      'BoneWeights',
+    ],
+    collision: {},
+    file: 'sampledata/models/bluecap.fbx',
+    name: 'bluecap',
+    recenter: {x:0.5, y:-0.35, z:0.55},
+    scale: 1,
+    smoothing_angle: 40,
+  },
+  samplers: [
+    {
+      file: 'sampledata/models\\bluecap.fbm\\304.png',
+      name: '304',
+      pipeline_name: 'bluecap.fbm\\304.png',
+    },
+    {
+      file: 'sampledata/models\\bluecap.fbm\\308.png',
+      name: '308',
+      pipeline_name: 'bluecap.fbm\\308.png',
+    },
+  ],
+  version: '0.54:2',
+}

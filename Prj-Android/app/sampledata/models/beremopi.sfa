@@ -1,0 +1,76 @@
+{
+  animations: [
+    {
+      path: 'sampledata/models/beremopi.fbx',
+    },
+  ],
+  materials: [
+    {
+      name: 'Material_73',
+      parameters: [
+        {
+          baseColor: [
+            1,
+            1,
+            1,
+            1,
+          ],
+        },
+        {
+          baseColorMap: '274',
+        },
+        {
+          normalMap: null,
+        },
+        {
+          interpolatedColor: null,
+        },
+        {
+          metallic: 0,
+        },
+        {
+          metallicMap: null,
+        },
+        {
+          roughness: 1,
+        },
+        {
+          roughnessMap: null,
+        },
+        {
+          opacity: null,
+        },
+      ],
+      source: 'build/sceneform_sdk/default_materials/fbx_material.sfm',
+    },
+  ],
+  model: {
+    attributes: [
+      'Position',
+      'Color',
+      'TexCoord',
+      'Orientation',
+      'BoneIndices',
+      'BoneWeights',
+    ],
+    collision: {},
+    file: 'sampledata/models/beremopi.fbx',
+    name: 'beremopi',
+    recenter: {x:0.5, y:-0.35, z:0.68},
+    scale: 1.05,
+    smoothing_angle: 40,
+  },
+  samplers: [
+    {
+      file: 'sampledata/models\\beremopi.fbm\\274.png',
+      name: '274',
+      pipeline_name: 'beremopi.fbm\\274.png',
+    },
+    {
+      file: 'sampledata/models\\beremopi.fbm\\278.png',
+      name: '278',
+      pipeline_name: 'beremopi.fbm\\278.png',
+    },
+  ],
+  version: '0.54:2',
+}

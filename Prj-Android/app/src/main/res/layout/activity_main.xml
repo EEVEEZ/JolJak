@@ -60,6 +60,12 @@
                 android:orientation="vertical">
 
                 <ImageButton
+                    android:id="@+id/ImageButton0"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:srcCompat="@drawable/menu_capture" />
+
+                <ImageButton
                     android:id="@+id/ImageButton1"
                     style="@style/Widget.AppCompat.ImageButton"
                     android:layout_width="80dp"

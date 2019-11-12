@@ -51,19 +51,63 @@ dependencies {
 
 apply plugin: 'com.google.ar.sceneform.plugin'
 
-sceneform.asset('sampledata/models/fox_face.fbx',
-        'default',
-        'sampledata/models/fox_face.sfa',
-        'src/main/res/raw/fox_face')
 
 sceneform.asset('sampledata/models/blackcap.fbx',
         'default',
         'sampledata/models/blackcap.sfa',
         'src/main/res/raw/blackcap')
 
-sceneform.asset('sampledata/models/beret.fbx',
+sceneform.asset('sampledata/models/bluecap.fbx',
         'default',
-        'sampledata/models/beret.sfa',
-        'src/main/res/raw/beret')
+        'sampledata/models/bluecap.sfa',
+        'src/main/res/raw/bluecap')
 
+sceneform.asset('sampledata/models/pinkcap.fbx',
+        'default',
+        'sampledata/models/pinkcap.sfa',
+        'src/main/res/raw/pinkcap')
 
+sceneform.asset('sampledata/models/whitecap.fbx',
+        'default',
+        'sampledata/models/whitecap.sfa',
+        'src/main/res/raw/whitecap')
+
+sceneform.asset('sampledata/models/beregray.fbx',
+        'default',
+        'sampledata/models/beregray.sfa',
+        'src/main/res/raw/beregray')
+
+sceneform.asset('sampledata/models/beremopi.fbx',
+        'default',
+        'sampledata/models/beremopi.sfa',
+        'src/main/res/raw/beremopi')
+
+sceneform.asset('sampledata/models/beremowh.fbx',
+        'default',
+        'sampledata/models/beremowh.sfa',
+        'src/main/res/raw/beremowh')
+
+sceneform.asset('sampledata/models/jungblue.fbx',
+        'default',
+        'sampledata/models/jungblue.sfa',
+        'src/main/res/raw/jungblue')
+
+sceneform.asset('sampledata/models/jungbrown.fbx',
+        'default',
+        'sampledata/models/jungbrown.sfa',
+        'src/main/res/raw/jungbrown')
+
+sceneform.asset('sampledata/models/jungco.fbx',
+        'default',
+        'sampledata/models/jungco.sfa',
+        'src/main/res/raw/jungco')
+
+sceneform.asset('sampledata/models/jungpurple.fbx',
+        'default',
+        'sampledata/models/jungpurple.sfa',
+        'src/main/res/raw/jungpurple')
+
+sceneform.asset('sampledata/models/nocap.fbx',
+        'default',
+        'sampledata/models/nocap.sfa',
+        'src/main/res/raw/nocap')

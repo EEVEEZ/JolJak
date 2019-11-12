@@ -56,14 +56,20 @@
     collision: {},
     file: 'sampledata/models/pinkcap.fbx',
     name: 'pinkcap',
-    recenter: 'root',
-    scale: 7.9404649999999997,
+    recenter: {x:0.5, y:-0.35, z:0.55},
+    scale: 1,
+    smoothing_angle: 40,
   },
   samplers: [
     {
       file: 'sampledata/models\\pinkcap.fbm\\624.png',
       name: '624',
       pipeline_name: 'pinkcap.fbm\\624.png',
+    },
+    {
+      file: 'sampledata/models\\pinkcap.fbm\\628.png',
+      name: '628',
+      pipeline_name: 'pinkcap.fbm\\628.png',
     },
   ],
   version: '0.54:2',

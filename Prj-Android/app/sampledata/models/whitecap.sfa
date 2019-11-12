@@ -56,10 +56,21 @@
     collision: {},
     file: 'sampledata/models/whitecap.fbx',
     name: 'whitecap',
-    recenter: 'root',
-    scale: 7.9404649999999997,
+    recenter: {x:0.5, y:-0.35, z:0.55},
+    scale: 1,
+    smoothing_angle: 40,
   },
   samplers: [
+    {
+      file: 'sampledata/models\\whitecap.fbm\\635.png',
+      name: '635',
+      pipeline_name: 'whitecap.fbm\\635.png',
+    },
+    {
+      file: 'sampledata/models\\whitecap.fbm\\639.png',
+      name: '639',
+      pipeline_name: 'whitecap.fbm\\639.png',
+    },
   ],
   version: '0.54:2',
 }

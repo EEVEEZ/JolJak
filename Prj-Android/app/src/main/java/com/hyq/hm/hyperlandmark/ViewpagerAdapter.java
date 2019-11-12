@@ -15,6 +15,9 @@ public class ViewpagerAdapter extends PagerAdapter {
     // LayoutInflater 서비스 사용을 위한 Context 참조 저장.
     private Context mContext = null ;
     private int mType;
+    private int DrawableType0[] = {
+            R.drawable.blank
+    };
     private int DrawableType1[] = {
             R.drawable.black_cap,
             R.drawable.white_cap,
@@ -22,9 +25,15 @@ public class ViewpagerAdapter extends PagerAdapter {
             R.drawable.pink_cap
     };
     private int DrawableType2[] = {
-            R.drawable.black_pe,
-            R.drawable.brown_pe,
-            R.drawable.gray_pe
+            R.drawable.jungblue,
+            R.drawable.jungbrown,
+            R.drawable.jungco,
+            R.drawable.jungpurple
+    };
+    private int DrawableType3[] = {
+            R.drawable.bere_gray,
+            R.drawable.beremo_pi,
+            R.drawable.beremo_wh
     };
 
     public ViewpagerAdapter() {
@@ -47,12 +56,22 @@ public class ViewpagerAdapter extends PagerAdapter {
             switch (mType) {
                 case 0: {
                     ImageView imageView = view.findViewById(R.id.CapImage);
+                    imageView.setImageResource(DrawableType0[position]);
+                    break;
+                }
+                case 1: {
+                    ImageView imageView = view.findViewById(R.id.CapImage);
                     imageView.setImageResource(DrawableType1[position]);
                     break;
                 }
-                case 1:{
+                case 2:{
                     ImageView imageView = view.findViewById(R.id.CapImage);
                     imageView.setImageResource(DrawableType2[position]);
+                    break;
+                }
+                case 3:{
+                    ImageView imageView = view.findViewById(R.id.CapImage);
+                    imageView.setImageResource(DrawableType3[position]);
                     break;
                 }
             }
@@ -62,6 +81,10 @@ public class ViewpagerAdapter extends PagerAdapter {
         container.addView(view) ;
 
         return view ;
+    }
+
+    public int getIndex(){
+        return mType;
     }
 
     @Override
@@ -75,10 +98,16 @@ public class ViewpagerAdapter extends PagerAdapter {
         int ret = -1;
         switch (mType){
             case 0:
-                ret = DrawableType1.length;
+                ret = DrawableType0.length;
                 break;
             case 1:
+                ret = DrawableType1.length;
+                break;
+            case 2:
                 ret = DrawableType2.length;
+                break;
+            case 3:
+                ret = DrawableType3.length;
                 break;
         }
 
