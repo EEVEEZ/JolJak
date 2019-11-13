@@ -246,17 +246,14 @@ public class MainActivity extends AppCompatActivity {
                         startActivity(intent);
                     } else if (mWebsocket.Cap_Predict) {
                         mWebsocket.Cap_Predict = false;
-                        if (mWebsocket.result.equals("bini")) {
-                            Toast toast = Toast.makeText(getApplicationContext(), "That is Bini", Toast.LENGTH_LONG);
+                        if (mWebsocket.result.equals("beret")) {
+                            Toast toast = Toast.makeText(getApplicationContext(), "That is Beret", Toast.LENGTH_LONG);
                             toast.show();
-                        } else if (mWebsocket.result.equals("fedora")) {
-                            Toast toast = Toast.makeText(getApplicationContext(), "That is Fedora", Toast.LENGTH_LONG);
+                        } else if (mWebsocket.result.equals("softhat")) {
+                            Toast toast = Toast.makeText(getApplicationContext(), "That is Softhat", Toast.LENGTH_LONG);
                             toast.show();
                         } else if (mWebsocket.result.equals("ballcap")) {
                             Toast toast = Toast.makeText(getApplicationContext(), "That is BallCap", Toast.LENGTH_LONG);
-                            toast.show();
-                        } else if (mWebsocket.result.equals("hunting")) {
-                            Toast toast = Toast.makeText(getApplicationContext(), "That is HuntingCap", Toast.LENGTH_LONG);
                             toast.show();
                         }
                     } else if (mWebsocket.Fail) {
